@@ -19,7 +19,8 @@ const [productFilter, setProductFilter] = useState("");
 
   const [showForm, setShowForm] = useState(false);
   const [refetch, setRefetch] = useState(0);
-
+  const [formLoading, setFormLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     product: "",
     quantityPlanned: "",
@@ -36,6 +37,7 @@ const [productFilter, setProductFilter] = useState("");
 
 const loadOrders = async () => {
   try {
+    setLoading(true)
     const res = await api.get(
       "/production-orders/listProductionOrdersPage",
       {
@@ -48,7 +50,6 @@ const loadOrders = async () => {
         },
       }
     );
-
     setOrders(res.data.orders || []);
     setTotalPages(res.data.pagination?.totalPages || 1);
   } catch (err) {
@@ -57,10 +58,14 @@ const loadOrders = async () => {
       "Failed to load production orders."
     );
   }
+  finally{
+    setLoading(false)
+  }
 };
 
 const startProduction = async (orderId) => {
     try {
+      setLoading(true)
       setLoadingId(orderId);
       await api.post("/production-preparation/start", {
         productionOrderId: orderId,
@@ -71,10 +76,12 @@ const startProduction = async (orderId) => {
       toast.error(err.response?.data?.message || "Failed to start production");
     } finally {
       setLoadingId(null);
+      setLoading(false)
     }
   };
 const loadProducts = async () => {
   try {
+    setLoading(true)
     const res = await api.get("/products");
     setProducts(res.data.items || res.data.products || []);
   } catch (err) {
@@ -82,6 +89,9 @@ const loadProducts = async () => {
       err.response?.data?.message ||
       "Failed to load products."
     );
+  }
+  finally{
+    setLoading(false)
   }
 };
 
@@ -99,6 +109,7 @@ const loadProducts = async () => {
   }
 
   try {
+    setFormLoading(true)
     await api.post("/production-orders", {
       product: form.product,
       quantityPlanned: Number(form.quantityPlanned),
@@ -118,6 +129,9 @@ const loadProducts = async () => {
       err.response?.data?.message ||
       "Failed to create production order."
     );
+  }
+  finally{
+    setFormLoading(false)
   }
 };
 // 🎨 Production Order Status Badge Colors
@@ -147,10 +161,13 @@ const getProductionStatusBadge = (status) => {
 
     {/* ================= HEADER ================= */}
     <div className="flex justify-between items-center mb-2">
-
+ {loading && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
     
     </div>
-
     {/* ================= CREATE MODAL ================= */}
     {showForm && (
       <>
@@ -234,18 +251,43 @@ const getProductionStatusBadge = (status) => {
               >
                 Cancel
               </button>
-
-              <button
-                type="submit"
-                className="
-                  px-5 py-2 rounded-lg text-white
-                  bg-gradient-to-r from-green-600 to-emerald-600
-                  hover:from-green-700 hover:to-emerald-700
-                  shadow-md hover:shadow-lg transition
-                "
-              >
-                Create Order
-              </button>
+               <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg text-white
+             bg-gradient-to-r from-indigo-600 to-blue-600
+             hover:from-indigo-700 hover:to-blue-700
+             shadow-md hover:shadow-lg
+             transition-all duration-200 flex items-center justify-center gap-2"
+                  disabled={formLoading} // or formLoading if you separate it
+                >
+                  {formLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        ></path>
+                      </svg>
+                      { "Saving..."}
+                    </>
+                  ) : 
+                    "Create Order"
+                  }
+                </button>
             </div>
           </form>
         </div>
@@ -391,109 +433,130 @@ const getProductionStatusBadge = (status) => {
 
     {/* ================= LIST TABLE ================= */}
     <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
-    <div className="flex items-end justify-between gap-6 p-4 border-b bg-gray-50">
+  <div className="bg-gray-50 p-4 border-b rounded-t-xl">
+  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
 
-  {/* ================= LEFT FILTERS ================= */}
-  <div className="flex flex-wrap gap-4">
+    {/* ================= LEFT FILTERS ================= */}
+    <div className="flex flex-wrap gap-4 flex-1">
 
-    {/* 🔍 SEARCH ORDER NUMBER */}
-    <div>
-      <label className="block text-xs text-gray-600 mb-1">
-        Search Order #
-      </label>
-      <input
-        type="text"
-        value={search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setPage(1);
-        }}
-        placeholder="PO-1766..."
-        className="border rounded-lg px-3 py-2 w-56"
-      />
+      {/* 🔍 SEARCH ORDER NUMBER */}
+      <div className="w-full sm:w-56">
+        <label className="block text-xs text-gray-600 mb-1">
+          Search Order #
+        </label>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          placeholder="PO-1766..."
+          className="w-full border rounded-lg px-3 py-2"
+        />
+      </div>
+
+      {/* 📦 PRODUCT FILTER */}
+      <div className="w-full sm:w-56">
+        <label className="block text-xs text-gray-600 mb-1">
+          Product
+        </label>
+        <select
+          value={productFilter}
+          onChange={(e) => {
+            setProductFilter(e.target.value);
+            setPage(1);
+          }}
+          className="w-full border rounded-lg px-3 py-2"
+        >
+          <option value="">All Products</option>
+          {products.map((p) => (
+            <option key={p._id} value={p._id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* 📌 STATUS FILTER */}
+      <div className="w-full sm:w-44">
+        <label className="block text-xs text-gray-600 mb-1">
+          Status
+        </label>
+        <select
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value);
+            setPage(1);
+          }}
+          className="w-full border rounded-lg px-3 py-2"
+        >
+          <option value="">All Status</option>
+          <option value="Planned">Planned</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      {/* 📄 LIMIT */}
+      <div className="w-full sm:w-24">
+        <label className="block text-xs text-gray-600 mb-1">
+          Rows
+        </label>
+        <select
+          value={limit}
+          onChange={(e) => {
+            setLimit(Number(e.target.value));
+            setPage(1);
+          }}
+          className="w-full border rounded-lg px-3 py-2"
+        >
+          {[5, 10, 20, 50].map((l) => (
+            <option key={l} value={l}>{l}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* CLEAR BUTTON */}
+      <div className="w-full sm:w-auto sm:pb-[2px]">
+        <label className="block text-xs text-gray-600 mb-1">
+          Clear 
+        </label>
+        <button
+          onClick={() => {
+            setSearch("");
+            setProductFilter("");
+            setStatus("");
+            setPage(1);
+          }}
+          className="w-full sm:w-auto px-4 py-2 border rounded-lg hover:bg-slate-100 transition"
+        >
+          Clear
+        </button>
+      </div>
+
     </div>
 
-    {/* 📦 PRODUCT FILTER */}
-    <div>
-      <label className="block text-xs text-gray-600 mb-1">
-        Product
-      </label>
-      <select
-        value={productFilter}
-        onChange={(e) => {
-          setProductFilter(e.target.value);
-          setPage(1);
-        }}
-        className="border rounded-lg px-3 py-2 w-56"
+    {/* ================= RIGHT ACTION ================= */}
+    <div className="flex-shrink-0">
+      <button
+        onClick={() => setShowForm(true)}
+        className="
+          flex items-center gap-2
+          bg-gradient-to-r from-indigo-600 to-blue-600
+          text-white px-5 py-2.5 rounded-lg
+          shadow-md hover:shadow-lg transition
+          whitespace-nowrap
+        "
       >
-        <option value="">All Products</option>
-        {products.map((p) => (
-          <option key={p._id} value={p._id}>
-            {p.name}
-          </option>
-        ))}
-      </select>
-    </div>
-
-    {/* 📌 STATUS FILTER */}
-    <div>
-      <label className="block text-xs text-gray-600 mb-1">
-        Status
-      </label>
-      <select
-        value={status}
-        onChange={(e) => {
-          setStatus(e.target.value);
-          setPage(1);
-        }}
-        className="border rounded-lg px-3 py-2 w-44"
-      >
-        <option value="">All Status</option>
-        <option value="Planned">Planned</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Completed">Completed</option>
-        <option value="Cancelled">Cancelled</option>
-      </select>
-    </div>
-
-    {/* 📄 LIMIT */}
-    <div>
-      <label className="block text-xs text-gray-600 mb-1">
-        Rows
-      </label>
-      <select
-        value={limit}
-        onChange={(e) => {
-          setLimit(Number(e.target.value));
-          setPage(1);
-        }}
-        className="border rounded-lg px-3 py-2 w-24"
-      >
-        {[5, 10, 20, 50].map((l) => (
-          <option key={l} value={l}>{l}</option>
-        ))}
-      </select>
+        <FaPlus /> New Production Order
+      </button>
     </div>
 
   </div>
-
-  {/* ================= RIGHT ACTION ================= */}
-  <div className="flex-shrink-0">
-    <button
-      onClick={() => setShowForm(true)}
-      className="
-        flex items-center gap-2
-        bg-gradient-to-r from-indigo-600 to-blue-600
-        text-white px-5 py-2.5 rounded-lg
-        shadow-md hover:shadow-lg transition
-        whitespace-nowrap
-      "
-    >
-      <FaPlus /> New Production Order
-    </button>
-  </div>
-
 </div>
+
 
 
       <table className="w-full table-fixed text-sm">

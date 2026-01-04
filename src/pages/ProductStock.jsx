@@ -16,7 +16,8 @@ const [products, setProducts] = useState([]);
 const [ledgerPage, setLedgerPage] = useState(1);
 const [ledgerLimit, setLedgerLimit] = useState(10);
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
-
+const [formLoading, setFormLoading] = useState(false);
+const [loading, setLoading] = useState(false);
 const [ledgerTotalPages, setLedgerTotalPages] = useState(1);
 const [ledgerSearch, setLedgerSearch] = useState("");
 const [ledgerStartDate, setLedgerStartDate] = useState("");
@@ -59,6 +60,7 @@ useEffect(() => {
   return () => clearTimeout(timer);
 }, [ledgerSearch]);
 
+
 useEffect(() => {
   loadLedger();
 }, [
@@ -72,6 +74,7 @@ useEffect(() => {
 
 const loadStock = async () => {
   try {
+    setLoading(true)
     const res = await api.get("/product-stock/master", {
       params: {
         page: masterPage,
@@ -85,6 +88,9 @@ const loadStock = async () => {
   } catch {
     toast.error("Failed to load product stock");
   }
+  finally{
+    setLoading(false)
+  }
 };
 useEffect(() => {
   if (activeTab === "master") {
@@ -95,6 +101,7 @@ useEffect(() => {
 
 const loadLedger = async () => {
   try {
+    setLoading(true)
     const res = await api.get("/product-stock/ledger", {
       params: {
         page: ledgerPage,
@@ -105,26 +112,29 @@ const loadLedger = async () => {
         endDate: ledgerEndDate || undefined,
       },
     });
-
     setLedger(res.data.data || []);
     setLedgerTotalPages(res.data.pagination?.totalPages || 1);
   } catch {
     toast.error("Failed to load product stock ledger");
   }
+  finally{
+    setLoading(false)
+  }
 };
-
-
 
   const loadProducts = async () => {
     try {
+      setLoading(true)
       const res = await api.get("/products");
       setProducts(res.data.products || []);
     } catch {
       toast.error("Failed to load products");
     }
+    finally{
+      setLoading(false)
+    }
   };
-
-  /* ============================
+  /* ===========================
      SUBMIT ADJUSTMENT
   ============================ */
   const submitAdjustment = async (e) => {
@@ -140,6 +150,7 @@ const loadLedger = async () => {
       return toast.error("Reason is required");
 
     try {
+      setFormLoading(true)
       await api.post("/product-stock/adjust", {
         product: adjustForm.product,
         type: adjustForm.type,
@@ -162,6 +173,9 @@ const loadLedger = async () => {
     } catch (err) {
       toast.error(err.response?.data?.message || "Adjustment failed");
     }
+    finally{
+      setFormLoading(false)
+    }
   };
 
   /* ============================
@@ -169,7 +183,11 @@ const loadLedger = async () => {
   ============================ */
  return (
   <div className="min-h-screen p-8 bg-gradient-to-br from-gray-100 to-gray-200 relative">
-
+   {loading && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
     {/* ================= HEADER ================= */}
     <div className="flex justify-between items-center mb-8">
       <div>
@@ -220,43 +238,61 @@ const loadLedger = async () => {
     {/* ================= STOCK MASTER ================= */}
     {activeTab === "master" && (
       <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
-        <div className="flex flex-wrap gap-4 p-4 items-end">
+   <div className="bg-white p-4 rounded-xl shadow mb-4">
+  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
 
-  {/* SEARCH */}
-  <div>
-    <label className="block text-sm text-gray-600 mb-1">
-      Search
-    </label>
-    <input
-      type="text"
-      placeholder="Product or SKU..."
-      className="border rounded-lg px-4 py-2 w-64"
-      value={masterSearch}
-      onChange={(e) => setMasterSearch(e.target.value)}
-    />
+    {/* 🔍 SEARCH */}
+    <div className="w-full sm:w-64">
+      <label className="block text-sm text-gray-600 mb-1">
+        Search
+      </label>
+      <input
+        type="text"
+        placeholder="Product or SKU..."
+        className="w-full border rounded-lg px-4 py-2"
+        value={masterSearch}
+        onChange={(e) => {
+          setMasterSearch(e.target.value);
+          setMasterPage(1);
+        }}
+      />
+    </div>
+
+    {/* 📄 LIMIT */}
+    <div className="w-full sm:w-24">
+      <label className="block text-sm text-gray-600 mb-1">
+        Limit
+      </label>
+      <select
+        className="w-full border rounded-lg px-3 py-2"
+        value={masterLimit}
+        onChange={(e) => {
+          setMasterLimit(Number(e.target.value));
+          setMasterPage(1);
+        }}
+      >
+        {[5, 10, 20, 50].map((size) => (
+          <option key={size} value={size}>
+            {size}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* CLEAR BUTTON */}
+    <div className="w-full sm:w-auto sm:pb-[2px]">
+      <button
+        onClick={() => {
+          setMasterSearch("");
+          setMasterPage(1);
+        }}
+        className="w-full sm:w-auto px-4 py-2 border rounded-lg hover:bg-slate-100 transition"
+      >
+        Clear
+      </button>
+    </div>
+
   </div>
-
-  {/* LIMIT */}
-  <div>
-    <label className="block text-sm text-gray-600 mb-1">
-      Limit
-    </label>
-    <select
-      className="border rounded-lg px-3 py-2 w-24"
-      value={masterLimit}
-      onChange={(e) => {
-        setMasterLimit(Number(e.target.value));
-        setMasterPage(1);
-      }}
-    >
-      {[5, 10, 20, 50].map((size) => (
-        <option key={size} value={size}>
-          {size}
-        </option>
-      ))}
-    </select>
-  </div>
-
 </div>
 
         <table className="w-full table-fixed text-sm">
@@ -328,113 +364,119 @@ const loadLedger = async () => {
     {activeTab === "ledger" && (
       
       <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
-       <div className="flex flex-wrap gap-4 p-4 items-end">
+  <div className="bg-white p-4 rounded-xl shadow mb-4">
+  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
 
-  {/* TEXT SEARCH */}
-  <div>
-    <label className="block text-sm text-gray-600 mb-1">
-      Search
-    </label>
-    <input
-      type="text"
-      placeholder="Product, source, reference..."
-      className="border rounded-lg px-4 py-2 w-64"
-      value={ledgerSearch}
-      onChange={(e) => setLedgerSearch(e.target.value)}
-    />
+    {/* 🔍 TEXT SEARCH */}
+    <div className="w-full sm:w-64">
+      <label className="block text-sm text-gray-600 mb-1">
+        Search
+      </label>
+      <input
+        type="text"
+        placeholder="Product, source, reference..."
+        className="w-full border rounded-lg px-4 py-2"
+        value={ledgerSearch}
+        onChange={(e) => {
+          setLedgerSearch(e.target.value);
+          setLedgerPage(1);
+        }}
+      />
+    </div>
+
+    {/* 📦 PRODUCT FILTER */}
+    <div className="w-full sm:w-64">
+      <label className="block text-sm text-gray-600 mb-1">
+        Product Search
+      </label>
+      <select
+        className="w-full border rounded-lg px-3 py-2"
+        value={ledgerProduct}
+        onChange={(e) => {
+          setledgerProduct(e.target.value);
+          setLedgerPage(1);
+        }}
+      >
+        <option value="">All Products</option>
+        {products.map((p) => (
+          <option key={p._id} value={p._id}>
+            {p.name}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* 📅 START DATE */}
+    <div className="w-full sm:w-40">
+      <label className="block text-sm text-gray-600 mb-1">
+        From Date
+      </label>
+      <input
+        type="date"
+        className="w-full border rounded-lg px-3 py-2"
+        value={ledgerStartDate}
+        onChange={(e) => {
+          setLedgerStartDate(e.target.value);
+          setLedgerPage(1);
+        }}
+      />
+    </div>
+
+    {/* 📅 END DATE */}
+    <div className="w-full sm:w-40">
+      <label className="block text-sm text-gray-600 mb-1">
+        To Date
+      </label>
+      <input
+        type="date"
+        className="w-full border rounded-lg px-3 py-2"
+        value={ledgerEndDate}
+        onChange={(e) => {
+          setLedgerEndDate(e.target.value);
+          setLedgerPage(1);
+        }}
+      />
+    </div>
+
+    {/* 📄 PAGE SIZE */}
+    <div className="w-full sm:w-24">
+      <label className="block text-sm text-gray-600 mb-1">
+        Limit
+      </label>
+      <select
+        className="w-full border rounded-lg px-3 py-2"
+        value={ledgerLimit}
+        onChange={(e) => {
+          setLedgerLimit(Number(e.target.value));
+          setLedgerPage(1);
+        }}
+      >
+        {PAGE_SIZE_OPTIONS.map((size) => (
+          <option key={size} value={size}>
+            {size}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* CLEAR FILTERS */}
+    <div className="w-full sm:w-auto sm:pb-[2px]">
+      <button
+        onClick={() => {
+          setLedgerSearch("");
+          setLedgerStartDate("");
+          setLedgerEndDate("");
+          setledgerProduct("");
+          setLedgerPage(1);
+        }}
+        className="w-full sm:w-auto px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition"
+      >
+        Clear
+      </button>
+    </div>
+
   </div>
-{/* PRODUCT FILTER */}
-<div>
-  <label className="block text-sm text-gray-600 mb-1">
-    Product Search
-  </label>
-  <select
-    className="border rounded-lg px-3 py-2 w-64"
-    value={ledgerProduct}
-    onChange={(e) => {
-      setledgerProduct(e.target.value);
-      setLedgerPage(1);
-    }}
-  >
-    <option value="">All Products</option>
-    {products.map((p) => (
-      <option key={p._id} value={p._id}>
-        {p.name}
-      </option>
-    ))}
-  </select>
 </div>
-
-  {/* START DATE */}
-  <div>
-    <label className="block text-sm text-gray-600 mb-1">
-      From Date
-    </label>
-    <input
-      type="date"
-      className="border rounded-lg px-3 py-2"
-      value={ledgerStartDate}
-      onChange={(e) => {
-        setLedgerStartDate(e.target.value);
-        setLedgerPage(1);
-      }}
-    />
-  </div>
-
-  {/* END DATE */}
-  <div>
-    <label className="block text-sm text-gray-600 mb-1">
-      To Date
-    </label>
-    <input
-      type="date"
-      className="border rounded-lg px-3 py-2"
-      value={ledgerEndDate}
-      onChange={(e) => {
-        setLedgerEndDate(e.target.value);
-        setLedgerPage(1);
-      }}
-    />
-  </div>
-{/* PAGE SIZE */}
-<div>
-  <label className="block text-sm text-gray-600 mb-1">
-    Limit
-  </label>
-  <select
-    className="border rounded-lg px-3 py-2 w-24"
-    value={ledgerLimit}
-    onChange={(e) => {
-      setLedgerLimit(Number(e.target.value));
-      setLedgerPage(1);
-    }}
-  >
-    {PAGE_SIZE_OPTIONS.map((size) => (
-      <option key={size} value={size}>
-        {size}
-      </option>
-    ))}
-  </select>
-</div>
-
-  {/* CLEAR FILTERS */}
-  <button
-    onClick={() => {
-      setLedgerSearch("");
-      setLedgerStartDate("");
-      setLedgerEndDate("");
-      setledgerProduct("");
-      setLedgerPage(1);
-    }}
-    className="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100"
-  >
-    Clear
-  </button>
-
-
-</div>
-
-
         <table className="w-full table-fixed text-sm">
           <thead className="bg-gray-100">
             <tr>
@@ -623,17 +665,43 @@ const loadLedger = async () => {
                 Cancel
               </button>
 
-              <button
-                type="submit"
-                className="
-                  px-6 py-2.5 rounded-lg text-white
-                  bg-gradient-to-r from-indigo-600 to-blue-600
-                  hover:from-indigo-700 hover:to-blue-700
-                  shadow-md hover:shadow-lg transition
-                "
-              >
-                Submit
-              </button>
+               <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg text-white
+             bg-gradient-to-r from-indigo-600 to-blue-600
+             hover:from-indigo-700 hover:to-blue-700
+             shadow-md hover:shadow-lg
+             transition-all duration-200 flex items-center justify-center gap-2"
+                  disabled={formLoading} // or formLoading if you separate it
+                >
+                  {formLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        ></path>
+                      </svg>
+                      { "Saving..."}
+                    </>
+                  ) : 
+                    "Save Adjustment"
+                  }
+                </button>
             </div>
           </form>
         </div>

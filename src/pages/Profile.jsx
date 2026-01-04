@@ -9,7 +9,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
-
+  const [formLoading, setFormLoading] = useState(false);
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({
     name: "",
@@ -20,6 +20,7 @@ const Profile = () => {
      LOAD PROFILE
   ===================== */
   const loadProfile = async () => {
+    setLoading(true)
     try {
       const res = await api.get("/auth");
 
@@ -47,8 +48,8 @@ const Profile = () => {
     setSaving(true);
 
     try {
+      setFormLoading(true)
       const res = await api.put("/auth", form);
-
       toast.success("Profile updated successfully");
       setProfile(res.data.user);
       setShowEdit(false);
@@ -56,6 +57,7 @@ const Profile = () => {
       toast.error(err.response?.data?.message || "Update failed");
     } finally {
       setSaving(false);
+      setFormLoading(false)
     }
   };
 if (loading || !profile) {
@@ -197,20 +199,44 @@ if (loading || !profile) {
               Cancel
             </button>
 
+            
             <button
-              type="submit"
-              disabled={saving}
-              className={`
-                px-6 py-2 rounded-lg text-white font-semibold
-                ${
-                  saving
-                    ? "bg-indigo-300 cursor-not-allowed"
-                    : "bg-indigo-600 hover:bg-indigo-700"
-                }
-              `}
-            >
-              {saving ? "Saving..." : "Save Changes"}
-            </button>
+             type="submit"
+             className="px-5 py-2 rounded-lg text-white
+             bg-gradient-to-r from-indigo-600 to-blue-600
+             hover:from-indigo-700 hover:to-blue-700
+             shadow-md hover:shadow-lg
+             transition-all duration-200 flex items-center justify-center gap-2"
+                  disabled={formLoading} // or formLoading if you separate it
+                >
+                  {formLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        ></path>
+                      </svg>
+                      { "Updating..."}
+                    </>
+                  ) : 
+                    "Updating Profile"
+                  }
+                </button>
           </div>
         </form>
       </div>

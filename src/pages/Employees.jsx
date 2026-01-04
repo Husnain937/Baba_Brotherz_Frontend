@@ -11,7 +11,7 @@ const Employees = () => {
   ============================ */
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  const [formLoading, setFormLoading] = useState(false);
   // List controls
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -41,11 +41,15 @@ const toggleStatus = async (id) => {
   if (!window.confirm("Are you sure you want to change employee status?")) return;
 
   try {
+    setLoading(true)
     await api.patch(`/employees/toggle-status/${id}`);
     toast.success("Employee status updated");
     loadEmployees();
   } catch (err) {
     toast.error(err.response?.data?.message || "Failed to update status");
+  }
+  finally{
+    setLoading(false)
   }
 };
 
@@ -95,6 +99,7 @@ const submitForm = async (e) => {
   }
 
   try {
+    setFormLoading(true)
     if (editingEmployee) {
       await api.put(`/employees/${editingEmployee._id}`, form);
       toast.success("Employee updated successfully");
@@ -120,6 +125,9 @@ const submitForm = async (e) => {
   } catch (err) {
     toast.error(err.response?.data?.message || "Failed to save employee");
   }
+  finally{
+    setFormLoading(false)
+  }
 };
 
   useEffect(() => {
@@ -132,6 +140,11 @@ const submitForm = async (e) => {
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
         {/* ================= CREATE / EDIT EMPLOYEE MODAL ================= */}
+        {loading && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
 {showForm && (
   <>
     {/* BACKDROP */}
@@ -139,7 +152,6 @@ const submitForm = async (e) => {
       className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
       onClick={() => setShowForm(false)}
     />
-
     {/* MODAL */}
     <div
       className="
@@ -236,17 +248,43 @@ const submitForm = async (e) => {
           >
             Cancel
           </button>
-
           <button
-            type="submit"
-            className="
-              px-6 py-2 rounded-lg text-white
-              bg-gradient-to-r from-green-600 to-emerald-600
-              hover:from-green-700 hover:to-emerald-700
-            "
-          >
-            Save
-          </button>
+             type="submit"
+             className="px-5 py-2 rounded-lg text-white
+             bg-gradient-to-r from-indigo-600 to-blue-600
+             hover:from-indigo-700 hover:to-blue-700
+             shadow-md hover:shadow-lg
+             transition-all duration-200 flex items-center justify-center gap-2"
+                  disabled={formLoading} // or formLoading if you separate it
+                >
+                  {formLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        ></path>
+                      </svg>
+                      { "Saving..."}
+                    </>
+                  ) : 
+                    "Save"
+                  }
+                </button>
         </div>
       </form>
     </div>
@@ -280,63 +318,74 @@ const submitForm = async (e) => {
 
 
       {/* ================= FILTER BAR ================= */}
-      <div className="bg-white p-4 rounded-xl shadow mb-4 flex flex-col md:flex-row gap-4">
-        <input
-          type="text"
-          placeholder="Search name, code or email..."
-          className="border rounded-lg px-4 py-2 w-full md:w-1/3"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+     <div className="bg-white p-4 rounded-xl shadow mb-4">
+  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
 
-        <select
-          value={status}
-          onChange={(e) => {
-            setStatus(e.target.value);
-            setPage(1);
-          }}
-          className="border rounded-lg px-3 py-2 w-40"
-        >
-          <option value="">All Status</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
+    {/* 🔍 SEARCH */}
+    <div className="w-full sm:w-72">
+      <input
+        type="text"
+        placeholder="Search name, code or email..."
+        className="w-full border rounded-lg px-4 py-2"
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
+      />
+    </div>
 
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="border rounded-lg px-3 py-2 w-40"
-        >
-          <option value="createdAt">Sort by Date</option>
-          <option value="name">Sort by Name</option>
-          <option value="employeeCode">Sort by Code</option>
-          <option value="monthlySalary">Sort by Salary</option>
-        </select>
+    {/* 📌 STATUS */}
+    <div className="w-full sm:w-40">
+      <select
+        value={status}
+        onChange={(e) => {
+          setStatus(e.target.value);
+          setPage(1);
+        }}
+        className="w-full border rounded-lg px-3 py-2"
+      >
+        <option value="">All Status</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+    </div>
 
-        <select
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-          className="border rounded-lg px-3 py-2 w-36"
-        >
-          <option value="desc">Descending</option>
-          <option value="asc">Ascending</option>
-        </select>
+    {/* 📄 LIMIT */}
+    <div className="w-full sm:w-24">
+      <select
+        value={limit}
+        onChange={(e) => {
+          setLimit(Number(e.target.value));
+          setPage(1);
+        }}
+        className="w-full border rounded-lg px-3 py-2"
+      >
+        {[5, 10, 20, 50].map((l) => (
+          <option key={l} value={l}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </div>
 
-        <select
-          value={limit}
-          onChange={(e) => {
-            setLimit(Number(e.target.value));
-            setPage(1);
-          }}
-          className="border rounded-lg px-3 py-2 w-24"
-        >
-          {[5, 10, 20, 50].map((l) => (
-            <option key={l} value={l}>
-              {l}
-            </option>
-          ))}
-        </select>
-      </div>
+    {/* CLEAR */}
+    <div className="w-full sm:w-auto">
+      <button
+        onClick={() => {
+          setSearch("");
+          setStatus("");
+          setPage(1);
+        }}
+        className="w-full sm:w-auto px-4 py-2 border rounded-lg hover:bg-slate-100 transition"
+      >
+        Clear
+      </button>
+    </div>
+
+  </div>
+</div>
+
 
       {/* ================= TABLE ================= */}
       <div className="bg-white rounded-2xl shadow overflow-x-auto">

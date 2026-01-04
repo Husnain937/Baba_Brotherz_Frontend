@@ -91,54 +91,73 @@ useEffect(() => {
       </div>
 
       {/* ================= FILTER BAR ================= */}
-      <div className="bg-white p-4 rounded-xl shadow mb-4 flex flex-wrap gap-4">
-        <select
-          className="border rounded-lg px-3 py-2 w-64"
-          value={accountId}
-          onChange={(e) => {
-            setAccountId(e.target.value);
-            setPage(1);
-          }}
-        >
-          <option value="">Select Account</option>
-          {accounts.map((a) => (
-            <option key={a._id} value={a._id}>
-              {a.name}
-            </option>
-          ))}
-        </select>
+    
+      <div className="bg-white p-4 rounded-xl shadow mb-4">
+  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
 
-        <input
-          type="date"
-          className="border rounded-lg px-3 py-2"
-          value={startDate}
-          onChange={(e) => {
-            setStartDate(e.target.value);
-            setPage(1);
-          }}
-        />
+    {/* ACCOUNT SELECT */}
+    <div className="w-full sm:w-64">
+      <select
+        className="w-full border rounded-lg px-3 py-2"
+        value={accountId}
+        onChange={(e) => {
+          setAccountId(e.target.value);
+          setPage(1);
+        }}
+      >
+        <option value="">Select Account</option>
+        {accounts.map((a) => (
+          <option key={a._id} value={a._id}>
+            {a.name}
+          </option>
+        ))}
+      </select>
+    </div>
 
-        <input
-          type="date"
-          className="border rounded-lg px-3 py-2"
-          value={endDate}
-          onChange={(e) => {
-            setEndDate(e.target.value);
-            setPage(1);
-          }}
-        />
-         <button
-          onClick={() => {
-            setAccountId("");
-            setStartDate("");
-            setEndDate("");
-            setPage(1)
-          }}
-          className="border rounded-lg px-3 py-2"
-        >
-          Clear
-        </button>
-      </div>
+    {/* START DATE */}
+    <div className="w-full sm:w-44">
+      <input
+        type="date"
+        className="w-full border rounded-lg px-3 py-2"
+        value={startDate}
+        onChange={(e) => {
+          setStartDate(e.target.value);
+          setPage(1);
+        }}
+      />
+    </div>
+
+    {/* END DATE */}
+    <div className="w-full sm:w-44">
+      <input
+        type="date"
+        className="w-full border rounded-lg px-3 py-2"
+        value={endDate}
+        onChange={(e) => {
+          setEndDate(e.target.value);
+          setPage(1);
+        }}
+      />
+    </div>
+
+    {/* CLEAR BUTTON */}
+    <div className="w-full sm:w-auto">
+      <button
+        onClick={() => {
+          setAccountId("");
+          setStartDate("");
+          setEndDate("");
+          setPage(1);
+        }}
+        className="w-full sm:w-auto border rounded-lg px-4 py-2 hover:bg-slate-100 transition"
+      >
+        Clear
+      </button>
+    </div>
+
+  </div>
+</div>
+
 
       {/* ================= TABLE ================= */}
       <div className="bg-white rounded-2xl shadow overflow-x-auto">

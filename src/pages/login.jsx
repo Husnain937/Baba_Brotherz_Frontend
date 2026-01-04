@@ -12,11 +12,11 @@ const Login = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const [formLoading, setFormLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
 
     // Frontend validation
     if (!email || !password) {
@@ -26,6 +26,8 @@ const Login = () => {
     }
 
     try {
+      setLoading(true)
+      setFormLoading(true)
       const response = await axios.post(
         "http://localhost:3000/api/auth/login",
         { email, password }
@@ -48,11 +50,17 @@ const Login = () => {
       );
     } finally {
       setLoading(false);
+      setFormLoading(false)
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-800 animated-gradient">
+     {loading && (
+  <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+)}
       <header className="bg-black/30 backdrop-blur-sm py-4 shadow-md">
         <h1 className="text-center text-2xl md:text-3xl font-bold text-white tracking-wide">
           Inventory Management System

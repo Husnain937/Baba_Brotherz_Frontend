@@ -9,7 +9,8 @@ const EditUser = ({ user, onClose, onSuccess }) => {
     role: user.role,
     permissions: user.permissions,
   });
-
+   const [formLoading, setFormLoading] = useState(false);
+ 
   const togglePermission = (key) => {
     setForm({
       ...form,
@@ -23,12 +24,16 @@ const EditUser = ({ user, onClose, onSuccess }) => {
   const submit = async (e) => {
     e.preventDefault();
     try {
+      setFormLoading(true)
       await api.patch(`/auth/users/${user._id}`, form);
       toast.success("User updated");
       onSuccess();
       onClose();
     } catch (err) {
       toast.error("Failed to update user");
+    }
+    finally{
+      setFormLoading(false)
     }
   };
 
@@ -79,12 +84,43 @@ const EditUser = ({ user, onClose, onSuccess }) => {
         >
           Cancel
         </button>
-        <button
-          type="submit"
-          className="bg-indigo-600 text-white px-5 py-2 rounded"
-        >
-          Save
-        </button>
+          <button
+             type="submit"
+             className="px-5 py-2 rounded-lg text-white
+             bg-gradient-to-r from-indigo-600 to-blue-600
+             hover:from-indigo-700 hover:to-blue-700
+             shadow-md hover:shadow-lg
+             transition-all duration-200 flex items-center justify-center gap-2"
+                  disabled={formLoading} // or formLoading if you separate it
+                >
+                  {formLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        ></path>
+                      </svg>
+                      { "Updating..."}
+                    </>
+                  ) : 
+                    "Update"
+                  }
+                </button>
       </div>
     </form>
   );

@@ -1,7 +1,9 @@
+/** @format */
+
 import React, { useEffect, useState } from "react";
 import api from "../api/axios";
 import { toast } from "react-toastify";
-import { FaPlus, FaToggleOn, FaToggleOff,FaEdit } from "react-icons/fa";
+import { FaPlus, FaToggleOn, FaToggleOff, FaEdit } from "react-icons/fa";
 import AccountLedger from "./AccountLedger";
 const Accounts = () => {
   /* ============================
@@ -14,6 +16,7 @@ const Accounts = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [editAccount, setEditAccount] = useState(null); // will hold the account being edited
   const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -40,7 +43,7 @@ const Accounts = () => {
   ============================ */
   const loadAccounts = async () => {
     try {
-       setLoading(true);
+      setLoading(true);
       const res = await api.get("/accounts", {
         params: {
           page,
@@ -59,38 +62,15 @@ const Accounts = () => {
   };
 
   useEffect(() => {
-  loadAccounts();
-}, [debouncedSearch, page, limit,selectedType]); // reload when any of these change
-
+    loadAccounts();
+  }, [debouncedSearch, page, limit, selectedType]); // reload when any of these change
 
   /* ============================
      CREATE ACCOUNT
   ============================ */
-  // const submitForm = async (e) => {
-  //   e.preventDefault();
-
-  //   try {
-  //     await api.post("/accounts", {
-  //       ...form,
-  //       openingBalance: Number(form.openingBalance),
-  //     });
-
-  //     toast.success("Account created");
-  //     setShowForm(false);
-  //     setForm({
-  //       name: "",
-  //       type: "Cash",
-  //       openingBalance: 0,
-  //       note: "",
-  //     });
-  //     loadAccounts();
-  //   } catch (err) {
-  //     toast.error(err.response?.data?.message || "Failed to create account");
-  //   }
-  // };
-  const submitForm = async (e) => {
+const submitForm = async (e) => {
     e.preventDefault();
-setLoading(true);
+    setFormLoading(true);
     try {
       if (editAccount) {
         // UPDATE
@@ -120,7 +100,7 @@ setLoading(true);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to save account");
     }
-    setLoading(false);
+    setFormLoading(false);
   };
 
   /* ============================
@@ -134,7 +114,7 @@ setLoading(true);
     } catch {
       toast.error("Failed to update status");
     }
-     setLoading(false);
+    setLoading(false);
   };
 
   /* ============================
@@ -142,11 +122,6 @@ setLoading(true);
   ============================ */
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
-       {loading && (
-  <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-  </div>
-)}
       {/* TABS */}
       <div className="flex gap-6 mb-6 border-b">
         {[
@@ -173,6 +148,11 @@ setLoading(true);
         <>
           {/* ================= HEADER ================= */}
           <div className="flex justify-between items-center mb-6">
+            {loading && (
+              <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+                <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
             <div>
               <h1 className="text-2xl font-bold text-gray-800">Accounts</h1>
               <p className="text-sm text-gray-600">
@@ -192,48 +172,74 @@ setLoading(true);
             </button>
           </div>
           {/* ================= FILTER BAR ================= */}
-         <div className="bg-white p-4 rounded-xl shadow mb-4 flex flex-wrap gap-4">
-  {/* 🔍 SEARCH */}
-  <input
-    type="text"
-    placeholder="Search account..."
-    className="border rounded-lg px-3 py-2 w-full md:w-1/3"
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-  />
+       <div className="bg-white p-4 rounded-xl shadow mb-4">
+  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
 
-  {/* 🟢 STATUS / TYPE FILTER */}
-  <select
-    className="border rounded-lg px-3 py-2 w-40"
-    value={selectedType} // new state for filter
-    onChange={(e) => {
-      setSelectedType(e.target.value);
-      setPage(1); // reset page when filter changes
-    }}
-  >
-    <option value="">All</option>
-    <option value="Cash">Cash</option>
-    <option value="Bank">Bank</option>
-    <option value="Wallet">Wallet</option>
-  </select>
+    {/* 🔍 SEARCH */}
+    <div className="w-full sm:w-64">
+      <input
+        type="text"
+        placeholder="Search account..."
+        className="w-full border rounded-lg px-3 py-2"
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
+      />
+    </div>
 
-  {/* 📄 LIMIT */}
-  <select
-    value={limit}
-    onChange={(e) => {
-      setLimit(Number(e.target.value));
-      setPage(1);
-    }}
-    className="border rounded-lg px-3 py-2 w-24"
-  >
-    {[5, 10, 20, 50].map((l) => (
-      <option key={l} value={l}>
-        {l}
-      </option>
-    ))}
-  </select>
+    {/* 🟢 STATUS / TYPE FILTER */}
+    <div className="w-full sm:w-40">
+      <select
+        className="w-full border rounded-lg px-3 py-2"
+        value={selectedType}
+        onChange={(e) => {
+          setSelectedType(e.target.value);
+          setPage(1);
+        }}
+      >
+        <option value="">All</option>
+        <option value="Cash">Cash</option>
+        <option value="Bank">Bank</option>
+        <option value="Wallet">Wallet</option>
+      </select>
+    </div>
+
+    {/* 📄 LIMIT */}
+    <div className="w-full sm:w-24">
+      <select
+        value={limit}
+        onChange={(e) => {
+          setLimit(Number(e.target.value));
+          setPage(1);
+        }}
+        className="w-full border rounded-lg px-3 py-2"
+      >
+        {[5, 10, 20, 50].map((l) => (
+          <option key={l} value={l}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* CLEAR BUTTON */}
+    <div className="w-full sm:w-auto">
+      <button
+        onClick={() => {
+          setSearch("");
+          setSelectedType("");
+          setPage(1);
+        }}
+        className="w-full sm:w-auto px-4 py-2 border rounded-lg hover:bg-slate-100 transition"
+      >
+        Clear
+      </button>
+    </div>
+
+  </div>
 </div>
-
 
           {/* ================= TABLE ================= */}
           <div className="bg-white rounded-2xl shadow overflow-x-auto">
@@ -264,7 +270,7 @@ setLoading(true);
                       idx % 2 ? "bg-gray-50" : "bg-white"
                     } border-b`}
                   >
-                    <td className="p-4 font-medium text-gray-800">{a.name}</td>
+                    <td className="p-4 font-bold text-gray-800">{a.name}</td>
 
                     <td className="p-4 text-center capitalize">{a.type}</td>
 
@@ -299,9 +305,9 @@ setLoading(true);
                           title="Edit Account"
                           className="text-blue-600"
                         >
-                          <FaEdit/>
+                          <FaEdit />
                         </button>
-                          <button
+                        <button
                           onClick={() => toggleStatus(a._id)}
                           title="Toggle Status"
                           className="text-2xl"
@@ -398,11 +404,41 @@ setLoading(true);
                   </button>
                   <button
   type="submit"
-  className="bg-green-600 text-white px-4 py-2 rounded"
-  disabled={loading}>
-  {editAccount ? "Update" : "Save"} 
+  className="px-5 py-2 rounded-lg text-white
+             bg-gradient-to-r from-indigo-600 to-blue-600
+             hover:from-indigo-700 hover:to-blue-700
+             shadow-md hover:shadow-lg
+             transition-all duration-200 flex items-center justify-center gap-2"
+  disabled={formLoading} // or formLoading if you separate it
+>
+  {formLoading ? (
+    <>
+      <svg
+        className="animate-spin h-5 w-5 text-white"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v8H4z"
+        ></path>
+      </svg>
+      {editAccount ? "Updating..." : "Saving..."}
+    </>
+  ) : (
+    editAccount ? "Update Account" : "Save Account"
+  )}
 </button>
-
                 </div>
               </form>
             </div>

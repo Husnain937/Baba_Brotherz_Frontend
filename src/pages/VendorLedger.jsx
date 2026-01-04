@@ -1,147 +1,259 @@
+/** @format */
+
 import React, { useEffect, useState } from "react";
 import api from "../api/axios";
-import { FaSearch } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 const VendorLedger = () => {
+  /* ================= STATES ================= */
   const [vendors, setVendors] = useState([]);
+  const [selectedVendorId, setSelectedVendorId] = useState("");
+
   const [ledger, setLedger] = useState([]);
+  const [vendor, setVendor] = useState(null);
 
-  const [selectedVendor, setSelectedVendor] = useState("");
-  const [runningBalance, setRunningBalance] = useState(0);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
+  const [loading, setLoading] = useState(false);
+
+  const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
+
+  /* ================= LOAD VENDORS ================= */
   useEffect(() => {
     loadVendors();
   }, []);
 
   const loadVendors = async () => {
-    const res = await api.get("/vendors/dropdown/vendors");
-    setVendors(res.data.vendors || []);
+    try {
+      const res = await api.get("/vendors/dropdown/vendors", {
+      });
+      setVendors(res.data.vendors || []);
+    } catch (err) {
+      toast.error("Failed to load vendors");
+    }
   };
 
+  /* ================= SEARCH DEBOUNCE ================= */
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  /* ================= LOAD LEDGER ================= */
+  useEffect(() => {
+    if (selectedVendorId) loadLedger();
+  }, [selectedVendorId, page, limit, debouncedSearch]);
+
   const loadLedger = async () => {
-    if (!selectedVendor) return alert("Select vendor first");
+    try {
+      setLoading(true);
 
-    const res = await api.get(`/vendor-ledger/${selectedVendor}`, {
-      params: { fromDate, toDate },
-    });
+      const res = await api.get(
+        `/vendorLedgerRoutes/${selectedVendorId}`,
+        {
+          params: { page, limit, search: debouncedSearch },
+        }
+      );
 
-    const entries = res.data.ledger || [];
+      setLedger(res.data.ledger || []);
+      setVendor(res.data.vendor || null);
+      setTotalPages(res.data.pagination?.totalPages || 1);
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Failed to load vendor ledger"
+      );
+    }
 
-    // Calculate running balance
-    let balance = 0;
-    const updated = entries.map((e) => {
-      if (e.type === "Credit") balance += e.amount; // vendor ko dena hai
-      else balance -= e.amount; // vendor ko pay kia
-
-      return { ...e, balance };
-    });
-
-    setLedger(updated);
-    setRunningBalance(balance);
+    setLoading(false);
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen p-8">
-      <h1 className="text-2xl font-bold mb-6">Vendor Ledger</h1>
-
-      {/* FILTER CARD */}
-      <div className="bg-white p-6 rounded-xl shadow-md mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <select
-          className="border p-2 rounded"
-          value={selectedVendor}
-          onChange={(e) => setSelectedVendor(e.target.value)}
-        >
-          <option value="">Select Vendor</option>
-          {vendors.map((v) => (
-            <option key={v._id} value={v._id}>
-              {v.vendorName}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="date"
-          className="border p-2 rounded"
-          value={fromDate}
-          onChange={(e) => setFromDate(e.target.value)}
-        />
-
-        <input
-          type="date"
-          className="border p-2 rounded"
-          value={toDate}
-          onChange={(e) => setToDate(e.target.value)}
-        />
-
-        <button
-          onClick={loadLedger}
-          className="flex items-center bg-blue-600 text-white px-4 py-2 rounded justify-center"
-        >
-          <FaSearch className="mr-2" /> Search
-        </button>
-      </div>
-
-      {/* BALANCE CARD */}
-      {selectedVendor && (
-        <div className="bg-white p-4 rounded-xl shadow-md mb-4">
-          <h2 className="text-lg font-semibold">
-            Outstanding Balance:
-            <span className="ml-2 font-bold text-red-600">
-              {runningBalance.toFixed(2)}
-            </span>
-          </h2>
+    <div>
+      {/* ================= LOADING ================= */}
+      {loading && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+          <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
+      {/* ================= HEADER ================= */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">Vendor Ledger</h1>
 
-      {/* LEDGER TABLE */}
-      <div className="bg-white shadow rounded overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-200">
-            <tr>
-              <th className="p-3 text-left">Date</th>
-              <th className="p-3 text-left">Description</th>
-              <th className="p-3 text-left">Debit</th>
-              <th className="p-3 text-left">Credit</th>
-              <th className="p-3 text-left">Balance</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {ledger.map((l, i) => (
-              <tr key={i} className="border-b hover:bg-gray-50">
-                <td className="p-3">
-                  {new Date(l.createdAt).toLocaleDateString()}
-                </td>
-
-                <td className="p-3">{l.description || "-"}</td>
-
-                <td className="p-3 text-red-600">
-                  {l.type === "Debit" ? l.amount.toFixed(2) : "-"}
-                </td>
-
-                <td className="p-3 text-green-600">
-                  {l.type === "Credit" ? l.amount.toFixed(2) : "-"}
-                </td>
-
-                <td className="p-3 font-semibold">
-                  {l.balance.toFixed(2)}
-                </td>
-              </tr>
-            ))}
-
-            {!ledger.length && (
-              <tr>
-                <td colSpan="5" className="text-center p-4 text-gray-500">
-                  No ledger entries found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        {vendor && (
+          <p className="text-sm text-gray-600 mt-1">
+            <span className="font-semibold">{vendor.vendorName}</span> • Current
+            Balance:{" "}
+            <span className="font-semibold text-indigo-600">
+              {vendor.currentBalance.toLocaleString()}
+            </span>
+          </p>
+        )}
       </div>
+
+      {/* ================= FILTER BAR ================= */}
+     <div className="bg-white rounded-2xl shadow-lg p-4 mb-6 flex flex-wrap gap-4 items-end">
+
+  {/* VENDOR DROPDOWN */}
+  <div className="w-72">
+    <label className="block text-sm text-gray-600 mb-1">Select Vendor</label>
+    <select
+      className="w-full border rounded-lg px-4 py-2"
+      value={selectedVendorId}
+      onChange={(e) => {
+        setSelectedVendorId(e.target.value);
+        setPage(1);
+      }}
+    >
+      <option value="">-- Select Vendor --</option>
+      {vendors.map((v) => (
+        <option key={v._id} value={v._id}>
+          {v.vendorName} {v.companyName ? `(${v.companyName})` : ""}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* SEARCH */}
+  <div className="w-64">
+    <label className="block text-sm text-gray-600 mb-1">Search</label>
+    <input
+      type="text"
+      placeholder="Search ledger..."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      disabled={!selectedVendorId}
+      className="w-full border rounded-lg px-4 py-2 disabled:bg-gray-100"
+    />
+  </div>
+
+  {/* LIMIT */}
+  <div className="w-24">
+    <label className="block text-sm text-gray-600 mb-1">Limit</label>
+    <select
+      value={limit}
+      onChange={(e) => {
+        setLimit(Number(e.target.value));
+        setPage(1);
+      }}
+      disabled={!selectedVendorId}
+      className="w-full border rounded-lg px-3 py-2 disabled:bg-gray-100"
+    >
+      {PAGE_SIZE_OPTIONS.map((s) => (
+        <option key={s} value={s}>
+          {s}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* CLEAR */}
+  <div className="mt-6">
+    <button
+      onClick={() => {
+        setSearch("");
+        setPage(1);
+      }}
+      disabled={!selectedVendorId}
+      className="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed"
+    >
+      Clear
+    </button>
+  </div>
+
+</div>
+
+
+      {/* ================= TABLE ================= */}
+      {!selectedVendorId ? (
+        <div className="text-center text-gray-500 bg-white p-10 rounded-2xl shadow">
+          Please select a vendor to view ledger
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-100 text-gray-700">
+              <tr>
+                <th className="p-4 text-left">Date</th>
+                <th className="p-4 text-left">Description</th>
+                <th className="p-4 text-center">Debit</th>
+                <th className="p-4 text-center">Credit</th>
+                <th className="p-4 text-right">Balance</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {ledger.map((row) => (
+                <tr
+                  key={row._id}
+                  className="border-t hover:bg-indigo-50 transition"
+                >
+                  <td className="p-4">
+                    {new Date(row.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="p-4">{row.description || "—"}</td>
+
+                  <td className="p-4 text-center text-green-600 font-medium">
+                    {row.type === "Debit"
+                      ? row.amount.toLocaleString()
+                      : "—"}
+                  </td>
+
+                  <td className="p-4 text-center text-red-600 font-medium">
+                    {row.type === "Credit"
+                      ? row.amount.toLocaleString()
+                      : "—"}
+                  </td>
+
+                  <td className="p-4 text-right font-semibold">
+                    {row.balanceAfter.toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+
+              {!ledger.length && (
+                <tr>
+                  <td colSpan="5" className="p-8 text-center text-gray-500">
+                    No ledger records found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          {/* PAGINATION */}
+          <div className="flex justify-between items-center p-4 border-t">
+            <span className="text-sm text-gray-600">
+              Page {page} of {totalPages}
+            </span>
+
+            <div className="flex gap-2">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage((p) => p - 1)}
+                className="px-3 py-1 border rounded disabled:opacity-50"
+              >
+                Prev
+              </button>
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="px-3 py-1 border rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

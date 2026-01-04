@@ -9,7 +9,8 @@ const Vendors = () => {
   const [editVendor, setEditVendor] = useState(null);
   const [refetch, setRefetch] = useState(0);
   const [debouncedSearch, setDebouncedSearch] = useState("");
-
+  const [formLoading, setFormLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   // ===== Pagination & Filters =====
 const [page, setPage] = useState(1);
 const [limit, setLimit] = useState(10);
@@ -45,6 +46,7 @@ useEffect(() => {
 
  const loadVendors = async () => {
   try {
+    setLoading(true)
     const res = await api.get("/vendors", {
       params: {
         page,
@@ -57,6 +59,9 @@ useEffect(() => {
     setTotalPages(res.data.pagination?.totalPages || 1);
   } catch (err) {
     toast.error("Failed to load vendors.");
+  }
+  finally{
+    setLoading(false)
   }
 };
   const openAdd = () => {
@@ -97,6 +102,7 @@ useEffect(() => {
     return toast.error("Phone number is required.");
 
   try {
+    setFormLoading(true)
     if (editVendor) {
       await api.put(`/vendors/${editVendor._id}`, form);
       toast.success("Vendor updated successfully");
@@ -115,12 +121,16 @@ useEffect(() => {
       "Failed to save vendor."
     );
   }
+  finally{
+    setFormLoading(false)
+  }
 };
 
 const deleteVendor = async (id) => {
   if (!window.confirm("Delete this vendor?")) return;
 
   try {
+    setLoading(true)
     await api.delete(`/vendors/${id}`);
     toast.success("Vendor deleted successfully");
     setRefetch((p) => p + 1);
@@ -130,10 +140,18 @@ const deleteVendor = async (id) => {
       "Failed to delete vendor."
     );
   }
+  finally{
+  setLoading(false)
+  }
 };
 
 return (
   <div className="min-h-screen p-8 bg-gradient-to-br from-gray-100 to-gray-200 relative">
+    {loading && (
+  <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+)}
     {/* ================= MODAL ================= */}
     {showForm && (
       <>
@@ -270,17 +288,44 @@ return (
                 Cancel
               </button>
 
+             
               <button
-                type="submit"
-                className="
-                  px-6 py-2.5 rounded-lg text-white
-                  bg-gradient-to-r from-indigo-600 to-blue-600
-                  hover:from-indigo-700 hover:to-blue-700
-                  shadow-md hover:shadow-lg transition
-                "
-              >
-                {editVendor ? "Update Vendor" : "Save Vendor"}
-              </button>
+  type="submit"
+  className="px-5 py-2 rounded-lg text-white
+             bg-gradient-to-r from-indigo-600 to-blue-600
+             hover:from-indigo-700 hover:to-blue-700
+             shadow-md hover:shadow-lg
+             transition-all duration-200 flex items-center justify-center gap-2"
+  disabled={formLoading} // or formLoading if you separate it
+>
+  {formLoading ? (
+    <>
+      <svg
+        className="animate-spin h-5 w-5 text-white"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v8H4z"
+        ></path>
+      </svg>
+      {editVendor ? "Updating..." : "Saving..."}
+    </>
+  ) : (
+    editVendor ? "Update Vendor" : "Save Vendor"
+  )}
+</button>
             </div>
           </form>
         </div>
@@ -311,36 +356,33 @@ return (
 
     {/* ================= TABLE ================= */}
     <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
-<div className="flex flex-wrap gap-4 p-4 items-end">
+<div className="flex flex-wrap gap-4 p-4 items-end bg-white rounded-xl shadow mb-4">
 
   {/* SEARCH */}
-  <div>
-    <label className="block text-sm text-gray-600 mb-1">
-      Search
-    </label>
+  <div className="w-64">
+    <label className="block text-sm text-gray-600 mb-1">Search</label>
     <input
-      className="border rounded-lg px-4 py-2 w-64"
+      type="text"
       placeholder="Vendor name, phone, company..."
       value={search}
       onChange={(e) => {
         setSearch(e.target.value);
         setPage(1);
       }}
+      className="w-full border rounded-lg px-4 py-2"
     />
   </div>
 
   {/* LIMIT */}
-  <div>
-    <label className="block text-sm text-gray-600 mb-1">
-      Limit
-    </label>
+  <div className="w-24">
+    <label className="block text-sm text-gray-600 mb-1">Limit</label>
     <select
-      className="border rounded-lg px-3 py-2 w-24"
       value={limit}
       onChange={(e) => {
         setLimit(Number(e.target.value));
         setPage(1);
       }}
+      className="w-full border rounded-lg px-3 py-2"
     >
       {PAGE_SIZE_OPTIONS.map((s) => (
         <option key={s} value={s}>{s}</option>
@@ -348,7 +390,21 @@ return (
     </select>
   </div>
 
+  {/* CLEAR */}
+  <div className="mt-6">
+    <button
+      onClick={() => {
+        setSearch("");
+        setPage(1);
+      }}
+      className="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100"
+    >
+      Clear
+    </button>
+  </div>
+
 </div>
+
 
       <table className="w-full table-fixed text-sm">
         <thead className="bg-gray-100">

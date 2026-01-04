@@ -14,7 +14,8 @@ const Users = () => {
   const [showForm, setShowForm] = useState(false);
 const [viewUser, setViewUser] = useState(null);
 const [editUser, setEditUser] = useState(null);
-
+  const [formLoading, setFormLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 const openView = async (id) => {
@@ -47,6 +48,7 @@ const openEdit = (user) => {
   ============================ */
   const loadUsers = async () => {
     try {
+      setLoading(true)
       const res = await api.get("/auth/users", {
         params: {
           page,
@@ -54,7 +56,6 @@ const openEdit = (user) => {
           search: debouncedSearch,
         },
       });
-
       setUsers(res.data.users || []);
       setTotalPages(res.data.totalPages || 1);
     } catch (err) {
@@ -64,17 +65,24 @@ const openEdit = (user) => {
         toast.error("Failed to load users");
       }
     }
+    finally{
+      setLoading(false)
+    }
   };
   const deleteUser = async(id)=>
   {
     if(!window.confirm("Are u sure u want to delete this user")) return;
     try {
+      setLoading(true)
        const res = await api.delete(`/auth/deleteUser/${id}`)
        toast.success(res?.data?.message || "Delete Successfully")  
        loadUsers();
     } catch (err) {
       console.log(err)
       toast.error(err.response?.data?.message || "Cannot delete User");
+    }
+    finally{
+      setLoading(false)
     }
   }
 
@@ -85,6 +93,11 @@ const openEdit = (user) => {
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       {/* ================= HEADER ================= */}
+          {loading && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">Users</h1>
@@ -102,30 +115,54 @@ const openEdit = (user) => {
       </div>
 
       {/* ================= FILTER BAR ================= */}
-      <div className="bg-white p-4 rounded-xl shadow mb-4 flex flex-wrap gap-4">
-        <input
-          type="text"
-          placeholder="Search user..."
-          className="border rounded-lg px-3 py-2 w-full md:w-1/3"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+    <div className="bg-white p-4 rounded-xl shadow mb-4 flex flex-wrap gap-4 items-end">
 
-        <select
-          value={limit}
-          onChange={(e) => {
-            setLimit(Number(e.target.value));
-            setPage(1);
-          }}
-          className="border rounded-lg px-3 py-2 w-24"
-        >
-          {[5, 10, 20, 50].map((l) => (
-            <option key={l} value={l}>
-              {l}
-            </option>
-          ))}
-        </select>
-      </div>
+  {/* SEARCH USER */}
+  <div className="w-full md:w-1/4">
+    <label className="block text-sm text-gray-600 mb-1">Search</label>
+    <input
+      type="text"
+      placeholder="Search user..."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      className="w-full border rounded-lg px-3 py-2"
+    />
+  </div>
+
+  {/* LIMIT */}
+  <div className="w-24">
+    <label className="block text-sm text-gray-600 mb-1">Limit</label>
+    <select
+      value={limit}
+      onChange={(e) => {
+        setLimit(Number(e.target.value));
+        setPage(1);
+      }}
+      className="w-full border rounded-lg px-3 py-2"
+    >
+      {[5, 10, 20, 50].map((l) => (
+        <option key={l} value={l}>
+          {l}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* CLEAR BUTTON */}
+  <div className="mt-4 md:mt-0">
+    <button
+      onClick={() => {
+        setSearch("");
+        setPage(1);
+      }}
+      className="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition"
+    >
+      Clear
+    </button>
+  </div>
+
+</div>
+
 
       {/* ================= TABLE ================= */}
       <div className="bg-white rounded-xl shadow overflow-x-auto">

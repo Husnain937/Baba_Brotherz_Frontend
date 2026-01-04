@@ -9,6 +9,7 @@ import { FaEye } from "react-icons/fa";
 
 const ProductionPreparation = () => {
   const [plannedOrders, setPlannedOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [preparations, setPreparations] = useState([]);
   const [loadingId, setLoadingId] = useState(null);
   const [activeTab, setActiveTab] = useState("Planned");
@@ -53,6 +54,7 @@ useEffect(() => {
   ============================ */
   const loadPlannedOrders = async () => {
     try {
+      setLoading(true)
       const res = await api.get("/production-orders");
       setPlannedOrders(
         (res.data.orders || []).filter(o => o.status === "Planned")
@@ -60,9 +62,13 @@ useEffect(() => {
     } catch {
       toast.error("Failed to load production orders");
     }
+    finally{
+      setLoading(false)
+    }
   };
  const loadPreparations = async () => {
   try {
+    setLoading(true)
     const res = await api.get("/production-preparation", {
       params: {
         page,
@@ -70,7 +76,6 @@ useEffect(() => {
         search: debouncedSearch,
         sortBy: "createdAt",
         sortOrder,
-        limit,
         status
       },
     });
@@ -80,6 +85,9 @@ useEffect(() => {
   } catch {
     toast.error("Failed to load production preparations");
   }
+  finally{
+      setLoading(false)
+    }
 };
 
   /* ============================
@@ -87,6 +95,7 @@ useEffect(() => {
   ============================ */
   const completeProduction = async (prepId) => {
     try {
+      setLoading(true)
       setLoadingId(prepId);
       await api.post(`/production-preparation/complete/${prepId}`);
 
@@ -97,6 +106,7 @@ useEffect(() => {
       toast.error(err.response?.data?.message || "Failed to complete production");
     } finally {
       setLoadingId(null);
+      setLoading(false)
     }
   };
 // 🎨 Production Preparation Status Badge
@@ -250,33 +260,50 @@ const getPrepStatusBadge = (status) => {
 
     {/* ================= IN PRODUCTION ================= */}
     <div>
+      {loading && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
       <div className="bg-white rounded-2xl shadow overflow-x-auto">
-        <div className="flex flex-col md:flex-row gap-4 p-4">
-  <input
-    type="text"
-    placeholder="Search order or product..."
-    className="border rounded-lg px-4 py-2 w-full md:w-1/3"
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-  />
+ <div className="bg-white p-4 rounded-xl shadow mb-4">
+  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
 
-  <select
-    className="border rounded-lg px-4 py-2"
-    value={sortOrder}
-    onChange={(e) => setSortOrder(e.target.value)}
-  >
-    <option value="desc">Newest First</option>
-    <option value="asc">Oldest First</option>
-  </select>
-     {/* 📌 STATUS FILTER */}
-    <div>
+    {/* 🔍 SEARCH */}
+    <div className="w-full sm:w-72">
+      <input
+        type="text"
+        placeholder="Search order or product..."
+        className="w-full border rounded-lg px-4 py-2"
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
+      />
+    </div>
+
+    {/* 🔀 SORT ORDER */}
+    <div className="w-full sm:w-40">
+      <select
+        className="w-full border rounded-lg px-4 py-2"
+        value={sortOrder}
+        onChange={(e) => setSortOrder(e.target.value)}
+      >
+        <option value="desc">Newest First</option>
+        <option value="asc">Oldest First</option>
+      </select>
+    </div>
+
+    {/* 📌 STATUS FILTER */}
+    <div className="w-full sm:w-44">
       <select
         value={status}
         onChange={(e) => {
           setStatus(e.target.value);
           setPage(1);
         }}
-        className="border rounded-lg px-3 py-2 w-44"
+        className="w-full border rounded-lg px-3 py-2"
       >
         <option value="">All Status</option>
         <option value="Planned">Planned</option>
@@ -287,21 +314,39 @@ const getPrepStatusBadge = (status) => {
     </div>
 
     {/* 📄 LIMIT */}
-    <div>
+    <div className="w-full sm:w-24">
       <select
         value={limit}
         onChange={(e) => {
           setLimit(Number(e.target.value));
           setPage(1);
         }}
-        className="border rounded-lg px-3 py-2 w-24"
+        className="w-full border rounded-lg px-3 py-2"
       >
         {[5, 10, 20, 50].map((l) => (
           <option key={l} value={l}>{l}</option>
         ))}
       </select>
     </div>
+
+    {/* CLEAR BUTTON */}
+    <div className="w-full sm:w-auto sm:pb-[2px]">
+      <button
+        onClick={() => {
+          setSearch("");
+          setSortOrder("");
+          setStatus("");
+          setPage(1);
+        }}
+        className="w-full sm:w-auto px-4 py-2 border rounded-lg hover:bg-slate-100 transition"
+      >
+        Clear
+      </button>
+    </div>
+
+  </div>
 </div>
+
         <table className="w-full text-sm">
           {/* ================= FILTER BAR ================= */}
 

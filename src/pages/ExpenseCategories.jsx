@@ -15,9 +15,12 @@ const ExpenseCategories = () => {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [note, setNote] = useState("");
+  const [formLoading, setFormLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const loadCategories = async () => {
     try {
+      setLoading(true)
       const res = await api.get("/expense-categories", {
         params: { page, search , limit },
       });
@@ -25,6 +28,9 @@ const ExpenseCategories = () => {
       setTotalPages(res.data.totalPages || 1);
     } catch {
       toast.error("Failed to load categories");
+    }
+    finally{
+      setLoading(false)
     }
   };
 
@@ -35,6 +41,7 @@ const ExpenseCategories = () => {
   const createCategory = async (e) => {
     e.preventDefault();
     try {
+      setFormLoading(true)
       await api.post("/expense-categories", { name, code, note });
       toast.success("Category created successfully");
       setShowForm(false);
@@ -45,14 +52,21 @@ const ExpenseCategories = () => {
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed");
     }
+    finally{
+      setFormLoading(false)
+    }
   };
 
   const toggleStatus = async (id) => {
     try {
+      setLoading(true)
       await api.patch(`/expense-categories/toggle/${id}`);
       loadCategories();
     } catch {
       toast.error("Failed to update status");
+    }
+    finally{
+      setLoading(false)
     }
   };
 
@@ -82,6 +96,11 @@ const ExpenseCategories = () => {
     {activeTab==="Expensive_Category" && (<>
       {/* ================= HEADER ================= */}
       <div className="flex justify-between items-center mb-6">
+        {loading && (
+  <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+)}
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
             Expense Categories
@@ -105,20 +124,56 @@ const ExpenseCategories = () => {
       </div>
 
       {/* ================= FILTER BAR ================= */}
-      <div className="bg-white p-4 rounded-xl shadow mb-4 flex gap-4">
-        <input
-          placeholder="Search category..."
-          className="border rounded-lg px-4 py-2 w-64"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-         <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}
-          className="border rounded-lg px-3 py-2">
-          {[5, 10, 20, 50].map((l) => (
-            <option key={l} value={l}>{l}</option>
-          ))}
-        </select>
-      </div>
+      <div className="bg-white p-4 rounded-xl shadow mb-4">
+  <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+
+    {/* 🔍 SEARCH */}
+    <div className="w-full sm:w-64">
+      <input
+        placeholder="Search category..."
+        className="w-full border rounded-lg px-4 py-2"
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
+      />
+    </div>
+
+    {/* 📄 LIMIT */}
+    <div className="w-full sm:w-24">
+      <select
+        value={limit}
+        onChange={(e) => {
+          setLimit(Number(e.target.value));
+          setPage(1);
+        }}
+        className="w-full border rounded-lg px-3 py-2"
+      >
+        {[5, 10, 20, 50].map((l) => (
+          <option key={l} value={l}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* CLEAR */}
+    <div className="w-full sm:w-auto">
+      <button
+        onClick={() => {
+          setSearch("");
+          setPage(1);
+        }}
+        className="w-full sm:w-auto px-4 py-2 border rounded-lg hover:bg-slate-100 transition"
+      >
+        Clear
+      </button>
+    </div>
+
+  </div>
+</div>
+
 
       {/* ================= TABLE ================= */}
       <div className="bg-white rounded-2xl shadow overflow-x-auto">
@@ -263,12 +318,43 @@ const ExpenseCategories = () => {
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                className="px-5 py-2 bg-green-600 text-white rounded-lg"
-              >
-                Save
-              </button>
+                <button
+          type="submit"
+          className="px-5 py-2 rounded-lg text-white
+             bg-gradient-to-r from-indigo-600 to-blue-600
+             hover:from-indigo-700 hover:to-blue-700
+             shadow-md hover:shadow-lg
+             transition-all duration-200 flex items-center justify-center gap-2"
+  disabled={formLoading}
+        >
+       {formLoading ? (
+    <>
+      <svg
+        className="animate-spin h-5 w-5 text-white"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v8H4z"
+        ></path>
+      </svg>
+      {"Saving..."}
+    </>
+  ) : (
+    "Save Expense Categories"
+  )}
+        </button>              
             </div>
           </form>
         </div>

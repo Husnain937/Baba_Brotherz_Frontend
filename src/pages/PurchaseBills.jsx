@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import api from "../api/axios";
 import { FaPlus, FaTrash, FaEye , FaCheck } from "react-icons/fa";
 import { toast } from "react-toastify";
-
+import VendorLedger from "./VendorLedger";
 const PurchaseBills = () => {
+  const [activeTab, setActiveTab] = useState("Purchase_Bills");
   const [bills, setBills] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [pos, setPos] = useState([]);
@@ -11,7 +12,8 @@ const PurchaseBills = () => {
   const [showForm, setShowForm] = useState(false);
   const [viewBill, setViewBill] = useState(null);
   const [refetch, setRefetch] = useState(0);
-  
+  const [formLoading, setFormLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   /* ================= LIST CONTROLS ================= */
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -67,6 +69,7 @@ useEffect(() => {
 
     const loadBills = async () => {
     try {
+      setLoading(true)
       const res = await api.get("/purchase-bills/listPurchaseBillsPage", {
         params: {
           page,
@@ -75,33 +78,42 @@ useEffect(() => {
           sortBy,
           sortOrder,
           status:billStatus,
-          limit
         },
       });
-
       setBills(res.data.bills || []);
       setTotalPages(res.data.totalPages || 1);
     } catch {
       toast.error("Failed to load purchase bills");
+    }
+    finally{
+      setLoading(false)
     }
   };
 
 
   const loadVendors = async () => {
     try {
+      setLoading(true)
       const res = await api.get("/vendors/dropdown/vendors");
       setVendors(res.data.vendors || []);
     } catch {
       toast.error("Failed to load vendors");
     }
+    finally{
+      setLoading(false)
+    }
   };
 
   const loadPOs = async () => {
     try {
+      setLoading(true)
       const res = await api.get("/purchase-orders");
       setPos(res.data.po || []);
     } catch {
       toast.error("Failed to load purchase orders");
+    }
+    finally{
+      setLoading(false)
     }
   };
 
@@ -154,6 +166,7 @@ useEffect(() => {
     };
 
     try {
+      setFormLoading(true)
       await api.post("/purchase-bills", payload);
       toast.success("Purchase bill created successfully");
 
@@ -162,6 +175,9 @@ useEffect(() => {
       setRefetch((p) => p + 1);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create bill");
+    }
+    finally{
+      setFormLoading(false)
     }
   };
 
@@ -178,6 +194,7 @@ useEffect(() => {
   };
 const payPurchaseBill = async () => {
   try {
+    setLoading(true)
     await api.patch(`/purchase-bills/pay/${payBillId}`, {
       accounts: selectedAccount
     });
@@ -189,6 +206,9 @@ const payPurchaseBill = async () => {
   } catch (err) {
     toast.error(err.response?.data?.message || "Payment failed");
   }
+  finally{
+    setLoading(false)
+  }
 };
 
   /* ================= DELETE ================= */
@@ -197,17 +217,49 @@ const payPurchaseBill = async () => {
     if (!window.confirm("Are you sure you want to delete this bill?")) return;
 
     try {
+      setLoading(true)
       await api.delete(`/purchase-bills/${id}`);
       toast.success("Bill deleted successfully");
       setRefetch((p) => p + 1);
     } catch (err) {
       toast.error(err.response?.data?.message || "Cannot delete bill");
     }
+    finally{
+      setLoading(false)
+    }
   };
 
      return (
   <div className="min-h-screen p-8 bg-gradient-to-br from-gray-100 to-gray-200 relative">
-
+   {/* TABS */}
+   
+      <div className="flex gap-6 mb-6 border-b">
+        {[
+          { key: "Purchase_Bills", label: "Purchase Bills" },
+          { key: "Vendor_Ledger", label: "Vendor Ledger" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`
+            pb-3 px-1 font-medium transition
+            ${
+              activeTab === tab.key
+                ? "border-b-2 border-indigo-600 text-indigo-600"
+                : "text-gray-600 hover:text-gray-800"
+            }
+          `}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+    {activeTab ==="Purchase_Bills" && (<>
+    {loading && (
+  <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+)}
     {/* ================= VIEW BILL MODAL ================= */}
    {viewBill && (
   <>
@@ -531,20 +583,47 @@ const payPurchaseBill = async () => {
         <button
           type="submit"
           onClick={submitForm}
-          className="px-6 py-2 rounded-lg text-white
-            bg-gradient-to-r from-green-600 to-emerald-600
-            hover:from-green-700 hover:to-emerald-700"
+          className="px-5 py-2 rounded-lg text-white
+             bg-gradient-to-r from-indigo-600 to-blue-600
+             hover:from-indigo-700 hover:to-blue-700
+             shadow-md hover:shadow-lg
+             transition-all duration-200 flex items-center justify-center gap-2"
+  disabled={formLoading}
         >
-          Save Bill
+       {formLoading ? (
+    <>
+      <svg
+        className="animate-spin h-5 w-5 text-white"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v8H4z"
+        ></path>
+      </svg>
+      {"Saving..."}
+    </>
+  ) : (
+    "Save Bill"
+  )}
         </button>
       </div>
     </div>
   </>
 )}
-
-
     {/* ================= HEADER ================= */}
-    <div className="flex justify-between items-center mb-8">
+    <div className="flex justify-between items-center mb-4">
       <div>
         <h1 className="text-3xl font-bold text-gray-800">Purchase Bills</h1>
         <p className="text-sm text-gray-600">Vendor invoices & bill tracking</p>
@@ -557,62 +636,70 @@ const payPurchaseBill = async () => {
         <FaPlus /> New Bill
       </button>
     </div>
+<div className="bg-white p-4 rounded-xl shadow mb-4">
+  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
 
-    {/* ================= TABLE ================= */}
-    <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
-      {/* ================= FILTER BAR ================= */}
-<div className="flex items-end justify-baseline gap-6 p-4 border-b bg-gray-50">
-  <input
-    type="text"
-    placeholder="Search by Vendor or PO..."
-    className="border rounded-lg px-4 py-2 w-full md:w-1/3"
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-  />
+    {/* 🔍 SEARCH */}
+    <div className="w-full md:w-1/4">
+      <input
+        type="text"
+        placeholder="Search by Vendor or PO..."
+        className="w-full border rounded-lg px-4 py-2"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+    </div>
 
-  <select
-    className="border rounded-lg px-4 py-2"
-    value={sortBy}
-    onChange={(e) => setSortBy(e.target.value)}
-  >
-    <option value="createdAt">Sort by Date</option>
-    <option value="totalAmount">Sort by Amount</option>
-  </select>
+    {/* SORT BY */}
+    <div className="w-full sm:w-48">
+      <select
+        className="w-full border rounded-lg px-4 py-2"
+        value={sortBy}
+        onChange={(e) => setSortBy(e.target.value)}
+      >
+        <option value="createdAt">Sort by Date</option>
+        <option value="totalAmount">Sort by Amount</option>
+      </select>
+    </div>
 
-  <select
-    className="border rounded-lg px-4 py-2"
-    value={sortOrder}
-    onChange={(e) => setSortOrder(e.target.value)}
-  >
-    <option value="desc">Descending</option>
-    <option value="asc">Ascending</option>
-  </select>
-  <div>
-  <select
-    value={billStatus}
-    onChange={(e) => {
-      setbillStatus(e.target.value);
-      setPage(1);
-    }}
-    className="
-     border rounded-lg px-4 py-2
-    "
-  >
-<option value="">All bill</option>
-<option value="Paid">Paid</option>
-<option value="Unpaid">Unpaid</option>
-<option value="Partially Paid">Partially Paid</option>
-  </select>
-</div>
-    {/* 📄 LIMIT */}
-    <div>
+    {/* SORT ORDER */}
+    <div className="w-full sm:w-40">
+      <select
+        className="w-full border rounded-lg px-4 py-2"
+        value={sortOrder}
+        onChange={(e) => setSortOrder(e.target.value)}
+      >
+        <option value="desc">Descending</option>
+        <option value="asc">Ascending</option>
+      </select>
+    </div>
+
+    {/* BILL STATUS */}
+    <div className="w-full sm:w-44">
+      <select
+        value={billStatus}
+        onChange={(e) => {
+          setbillStatus(e.target.value);
+          setPage(1);
+        }}
+        className="w-full border rounded-lg px-4 py-2"
+      >
+        <option value="">All Bills</option>
+        <option value="Paid">Paid</option>
+        <option value="Unpaid">Unpaid</option>
+        <option value="Partially Paid">Partially Paid</option>
+      </select>
+    </div>
+
+    {/* LIMIT */}
+    <div className="w-full sm:w-24">
       <select
         value={limit}
         onChange={(e) => {
           setlimit(Number(e.target.value));
           setPage(1);
         }}
-        className="border rounded-lg px-3 py-2 w-24"
+        className="w-full border rounded-lg px-3 py-2"
       >
         {[5, 10, 20, 50].map((l) => (
           <option key={l} value={l}>{l}</option>
@@ -620,8 +707,28 @@ const payPurchaseBill = async () => {
       </select>
     </div>
 
+    {/* CLEAR BUTTON */}
+    <div className="w-full sm:w-auto sm:pb-[2px]">
+      <button
+        onClick={() => {
+          setSearch("");
+          setSortBy("");
+          setSortOrder("");
+          setbillStatus("");
+          setPage(1);
+        }}
+        className="w-full sm:w-auto px-4 py-2 border rounded-lg hover:bg-gray-100 transition"
+      >
+        Clear
+      </button>
+    </div>
+
+  </div>
 </div>
 
+    {/* ================= TABLE ================= */}
+    <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
+      {/* ================= FILTER BAR ================= */}
       <table className="w-full table-fixed text-sm">
         <thead className="bg-gray-100">
           <tr>
@@ -751,8 +858,10 @@ const payPurchaseBill = async () => {
     </div>
   </div>
 )}
-
-  </div>
+</>
+)}
+{activeTab==="Vendor_Ledger" &&  (<><VendorLedger/></>)}
+</div>
 );
 
 

@@ -15,6 +15,8 @@ const BOM = () => {
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
+  const [formLoading, setFormLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -49,6 +51,7 @@ const BOM = () => {
 
   const loadBOMs = async () => {
     try {
+      setLoading(true)
       const res = await api.get("/bom/listBOMsPage", {
         params: {
           page,
@@ -57,11 +60,13 @@ const BOM = () => {
           status
         },
       });
-
       setBoms(res.data.data || []);
       setTotalPages(res.data.pagination?.totalPages || 1);
     } catch (err) {
       toast.error("Failed to load BOMs");
+    }
+    finally{
+      setLoading(false)
     }
   };
 
@@ -108,7 +113,6 @@ const BOM = () => {
 
   const submitForm = async (e) => {
     e.preventDefault();
-
     if (!form.product) return toast.error("Select a product");
     if (!form.items.length) return toast.error("Add at least one item");
 
@@ -117,7 +121,6 @@ const BOM = () => {
         return toast.error("Invalid item quantity");
       }
     }
-
     const payload = {
       product: form.product,
       items: form.items.map((i) => ({
@@ -129,6 +132,7 @@ const BOM = () => {
     };
 
     try {
+    setFormLoading(true)
       if (editingId) {
         await api.put(`/bom/${editingId}`, payload);
         toast.success("BOM updated successfully");
@@ -140,6 +144,9 @@ const BOM = () => {
       resetForm();
     } catch (err) {
       toast.error(err.response?.data?.message || "Operation failed");
+    }
+    finally{
+      setFormLoading(false)
     }
   };
 
@@ -177,11 +184,15 @@ const BOM = () => {
     if (!window.confirm("Are you sure you want to Inactive this BOM?")) return;
 
     try {
+      setLoading(true)
       await api.delete(`/bom/${id}`);
       toast.success("BOM deleted successfully");
       setRefetch((p) => p + 1);
     } catch {
       toast.error("Failed to delete BOM");
+    }
+    finally{
+      setLoading(false)
     }
   };
 const getBOMStatusBadge = (status) => {
@@ -200,6 +211,11 @@ const getBOMStatusBadge = (status) => {
 
   return (
     <div className="min-h-screen p-8 bg-gradient-to-br from-gray-100 to-gray-200 relative">
+      {loading && (
+  <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+)}
       {viewBOM && (
         <>
           {/* BACKDROP */}
@@ -428,17 +444,43 @@ const getBOMStatusBadge = (status) => {
                 >
                   Cancel
                 </button>
-
                 <button
-                  type="submit"
-                  className="
-                  px-6 py-2 rounded-lg text-white
-                  bg-gradient-to-r from-green-600 to-emerald-600
-                  hover:from-green-700 hover:to-emerald-700
-                "
-                >
-                  {editingId ? "Update BOM" : "Save BOM"}
-                </button>
+  type="submit"
+  className="px-5 py-2 rounded-lg text-white
+             bg-gradient-to-r from-indigo-600 to-blue-600
+             hover:from-indigo-700 hover:to-blue-700
+             shadow-md hover:shadow-lg
+             transition-all duration-200 flex items-center justify-center gap-2"
+  disabled={formLoading} // or formLoading if you separate it
+>
+  {formLoading ? (
+    <>
+      <svg
+        className="animate-spin h-5 w-5 text-white"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v8H4z"
+        ></path>
+      </svg>
+      {editingId  ? "Updating..." : "Saving..."}
+    </>
+  ) : (
+    editingId  ? "Update BOM" : "Save BOM"
+  )}
+</button>
               </div>
             </form>
           </div>
@@ -447,57 +489,83 @@ const getBOMStatusBadge = (status) => {
 
       {/* ================= LIST ================= */}
       <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
-        <div className="flex flex-wrap gap-4 p-5 items-end">
-          {/* 🔍 PRODUCT SEARCH */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              Search Product
-            </label>
-            <input
-              type="text"
-              placeholder="Search by product name or SKU"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="border rounded-lg px-4 py-2 w-64"
-            />
-          </div>
- {/* 📌 STATUS FILTER */}
-  <div>
-    <label className="block text-xs text-gray-600 mb-1">
-      Status
-    </label>
-    <select
-      value={status}
-      onChange={(e) => {
-        setStatus(e.target.value);
-        setPage(1);
-      }}
-      className="border rounded-lg px-3 py-2 w-44"
-    >
-      <option value="">All Status</option>
-      <option value="Active">Active</option>
-      <option value="Inactive">Inactive</option>
-    </select>
+        <div className="bg-white p-5 rounded-xl shadow mb-4">
+  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+
+    {/* 🔍 PRODUCT SEARCH */}
+    <div className="w-full sm:w-64">
+      <label className="block text-sm text-gray-600 mb-1">
+        Search Product
+      </label>
+      <input
+        type="text"
+        placeholder="Search by product name or SKU"
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
+        className="w-full border rounded-lg px-4 py-2"
+      />
+    </div>
+
+    {/* 📌 STATUS FILTER */}
+    <div className="w-full sm:w-40">
+      <label className="block text-sm text-gray-600 mb-1">
+        Status
+      </label>
+      <select
+        value={status}
+        onChange={(e) => {
+          setStatus(e.target.value);
+          setPage(1);
+        }}
+        className="w-full border rounded-lg px-3 py-2"
+      >
+        <option value="">All Status</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+    </div>
+
+    {/* 📄 LIMIT */}
+    <div className="w-full sm:w-24">
+      <label className="block text-sm text-gray-600 mb-1">
+        Limit
+      </label>
+      <select
+        value={limit}
+        onChange={(e) => {
+          setLimit(Number(e.target.value));
+          setPage(1);
+        }}
+        className="w-full border rounded-lg px-3 py-2"
+      >
+        {[5, 10, 20, 50].map((l) => (
+          <option key={l} value={l}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* CLEAR BUTTON */}
+    <div className="w-full sm:w-auto sm:pb-[2px]">
+      <button
+        onClick={() => {
+          setSearch("");
+          setStatus("");
+          setPage(1);
+        }}
+        className="w-full sm:w-auto px-4 py-2 border rounded-lg hover:bg-slate-100 transition"
+      >
+        Clear
+      </button>
+    </div>
+
   </div>
-          {/* 📄 LIMIT */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Limit</label>
-            <select
-              value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value));
-                setPage(1);
-              }}
-              className="border rounded-lg px-3 py-2 w-24"
-            >
-              {[5, 10, 20, 50].map((l) => (
-                <option key={l} value={l}>
-                  {l}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+</div>
+
 
        <table className="w-full table-fixed text-sm">
   <thead className="bg-gray-100 border-b">

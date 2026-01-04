@@ -23,6 +23,8 @@ const Expense = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+    const [formLoading, setFormLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     category: "",
     amount: "",
@@ -37,6 +39,7 @@ const Expense = () => {
   ======================= */
   const loadExpenses = async () => {
     try {
+      setLoading(true)
       const res = await api.get("/expenses", {
         params: { page, limit, search, status ,startDate,endDate},
       });
@@ -44,6 +47,9 @@ const Expense = () => {
       setTotalPages(res.data.totalPages || 1);
     } catch {
       toast.error("Failed to load expenses");
+    }
+    finally{
+      setLoading(false)
     }
   };
 const loadAccounts = async () => {
@@ -71,12 +77,16 @@ useEffect(() => {
   if (!startDate || !endDate) return;
 
   try {
+    setLoading(true)
     const res = await api.get("/expenses/summary", {
       params: { startDate, endDate },
     });
     setSummary(res.data.summary);
   } catch {
     toast.error("Failed to load expense summary");
+  }
+  finally{
+    setLoading(false)
   }
 };
 useEffect(() => {
@@ -88,12 +98,12 @@ useEffect(() => {
   ======================= */
   const submitExpense = async (e) => {
     e.preventDefault();
-
     if (!form.category || !form.amount || !form.expenseDate) {
       return toast.error("Category, amount and date are required");
     }
 
     try {
+      setFormLoading(true)
       await api.post("/expenses", form);
       toast.success("Expense created");
       setShowForm(false);
@@ -111,6 +121,9 @@ useEffect(() => {
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create expense");
     }
+    finally{
+      setFormLoading(false)
+    }
   };
 
   /* =======================
@@ -118,6 +131,7 @@ useEffect(() => {
   ======================= */
   const payExpense = async () => {
             try {
+              setLoading(true)
               await api.patch(`/expenses/pay/${payExpenseId}`, {
                 account: selectedAccount,
               });
@@ -129,6 +143,9 @@ useEffect(() => {
             } catch (err) {
               toast.error(err.response?.data?.message || "Payment failed");
             }
+            finally{
+              setLoading(false)
+            }
   };
 
   /* =======================
@@ -137,6 +154,7 @@ useEffect(() => {
   const updateExpense = async (e) => {
     e.preventDefault();
     try {
+      setLoading(true)
       await api.patch(`/expenses/${editExpense._id}`, {
         reference: editExpense.reference,
         note: editExpense.note,
@@ -147,6 +165,9 @@ useEffect(() => {
       loadExpenses();
     } catch (err) {
       toast.error(err.response?.data?.message || "Update failed");
+    }
+    finally{
+      setLoading(false)
     }
   };
 
@@ -191,6 +212,11 @@ useEffect(() => {
 
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
+           {loading && (
+  <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+)}
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Expenses</h1>
           <p className="text-sm text-gray-600">
@@ -214,61 +240,107 @@ useEffect(() => {
       </div>
 
       {/* FILTER BAR */}
-      <div className="bg-white p-4 rounded-xl shadow mb-4 flex flex-wrap gap-3 items-end">
+ <div className="bg-white p-4 rounded-xl shadow mb-4">
+  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
 
-  {/* SEARCH */}
-  <input
-    placeholder="Search expense..."
-    className="border rounded-lg px-3 py-2"
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-  />
+    {/* 🔍 SEARCH */}
+    <div className="w-full sm:w-56">
+      <input
+        placeholder="Search expense..."
+        className="w-full border rounded-lg px-3 py-2"
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
+      />
+    </div>
 
-  {/* STATUS */}
-  <select
-    value={status}
-    onChange={(e) => setStatus(e.target.value)}
-    className="border rounded-lg px-3 py-2"
-  >
-    <option value="">All Status</option>
-    <option value="Pending">Pending</option>
-    <option value="Paid">Paid</option>
-  </select>
+    {/* 📌 STATUS */}
+    <div className="w-full sm:w-36">
+      <select
+        value={status}
+        onChange={(e) => {
+          setStatus(e.target.value);
+          setPage(1);
+        }}
+        className="w-full border rounded-lg px-3 py-2"
+      >
+        <option value="">All Status</option>
+        <option value="Pending">Pending</option>
+        <option value="Paid">Paid</option>
+      </select>
+    </div>
 
-  {/* START DATE */}
-  <div>
-    <label className="block text-xs text-gray-500 mb-1">From</label>
-    <input
-      type="date"
-      className="border rounded-lg px-3 py-2"
-      value={startDate}
-      onChange={(e) => {
-        setStartDate(e.target.value);
-        setPage(1);
-      }}
-    />
+    {/* 📅 FROM DATE */}
+    <div className="w-full sm:w-40">
+      <label className="block text-xs text-gray-500 mb-1">
+        From
+      </label>
+      <input
+        type="date"
+        className="w-full border rounded-lg px-3 py-2"
+        value={startDate}
+        onChange={(e) => {
+          setStartDate(e.target.value);
+          setPage(1);
+        }}
+      />
+    </div>
+
+    {/* 📅 TO DATE */}
+    <div className="w-full sm:w-40">
+      <label className="block text-xs text-gray-500 mb-1">
+        To
+      </label>
+      <input
+        type="date"
+        className="w-full border rounded-lg px-3 py-2"
+        value={endDate}
+        onChange={(e) => {
+          setEndDate(e.target.value);
+          setPage(1);
+        }}
+      />
+    </div>
+
+    {/* 📄 LIMIT */}
+    <div className="w-full sm:w-24">
+      <select
+        value={limit}
+        onChange={(e) => {
+          setLimit(Number(e.target.value));
+          setPage(1);
+        }}
+        className="w-full border rounded-lg px-3 py-2"
+      >
+        {[5, 10, 20, 50].map((l) => (
+          <option key={l} value={l}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* CLEAR */}
+    <div className="w-full sm:w-auto sm:pb-[2px]">
+      <button
+        onClick={() => {
+          setSearch("");
+          setStartDate("");
+          setEndDate("");
+          setStatus("");
+          setPage(1);
+        }}
+        className="w-full sm:w-auto px-4 py-2 border rounded-lg hover:bg-slate-100 transition"
+      >
+        Clear
+      </button>
+    </div>
+
   </div>
-
-  {/* END DATE */}
-  <div>
-    <label className="block text-xs text-gray-500 mb-1">To</label>
-    <input
-      type="date"
-      className="border rounded-lg px-3 py-2"
-      value={endDate}
-      onChange={(e) => {
-        setEndDate(e.target.value);
-        setPage(1);
-      }}
-    />
-  </div>
-  <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}
-          className="border rounded-lg px-3 py-2">
-          {[5, 10, 20, 50].map((l) => (
-            <option key={l} value={l}>{l}</option>
-          ))}
-        </select>
 </div>
+
 
 
       {/* TABLE */}
@@ -491,12 +563,43 @@ useEffect(() => {
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                className="px-5 py-2 bg-green-600 text-white rounded-lg"
-              >
-                Save
-              </button>
+                <button
+          type="submit"
+          className="px-5 py-2 rounded-lg text-white
+             bg-gradient-to-r from-indigo-600 to-blue-600
+             hover:from-indigo-700 hover:to-blue-700
+             shadow-md hover:shadow-lg
+             transition-all duration-200 flex items-center justify-center gap-2"
+  disabled={formLoading}
+        >
+       {formLoading ? (
+    <>
+      <svg
+        className="animate-spin h-5 w-5 text-white"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v8H4z"
+        ></path>
+      </svg>
+      {"Saving..."}
+    </>
+  ) : (
+    "Save Expense"
+  )}
+        </button>
             </div>
           </form>
         </div>
@@ -555,12 +658,43 @@ useEffect(() => {
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                className="px-5 py-2 bg-indigo-600 text-white rounded-lg"
-              >
-                Update
-              </button>
+                <button
+          type="submit"
+          className="px-5 py-2 rounded-lg text-white
+             bg-gradient-to-r from-indigo-600 to-blue-600
+             hover:from-indigo-700 hover:to-blue-700
+             shadow-md hover:shadow-lg
+             transition-all duration-200 flex items-center justify-center gap-2"
+  disabled={formLoading}
+        >
+       {formLoading ? (
+    <>
+      <svg
+        className="animate-spin h-5 w-5 text-white"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v8H4z"
+        ></path>
+      </svg>
+      {"Updating..."}
+    </>
+  ) : (
+    "Update Bill"
+  )}
+        </button>
             </div>
           </form>
         </div>

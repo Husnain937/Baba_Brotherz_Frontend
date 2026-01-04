@@ -171,6 +171,33 @@ const Stock = () => {
     }
     setFormLoading(false)
   };
+const getStockStatus = (quantity, minLevel, reorderLevel) => {
+  if (quantity === 0) {
+    return {
+      label: "Empty",
+      className: "bg-gray-200 text-gray-700"
+    };
+  }
+
+  if (quantity <= reorderLevel) {
+    return {
+      label: "Reorder Point",
+      className: "bg-red-100 text-red-700"
+    };
+  }
+
+  if (quantity <= minLevel) {
+    return {
+      label: "Minimum",
+      className: "bg-yellow-100 text-yellow-700"
+    };
+  }
+
+  return {
+    label: "Stable",
+    className: "bg-green-100 text-green-700"
+  };
+};
 
   /* ================= UI ================= */
   return (
@@ -226,66 +253,91 @@ const Stock = () => {
       </div>
 
       {/* ================= STOCK MASTER ================= */}
-      {activeTab === "master" && (
+      {activeTab === "master" && (<>
+        <div className="bg-white p-4 rounded-xl shadow mb-4">
+  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+
+    {/* 🔍 SEARCH */}
+    <div className="w-full sm:w-64">
+      <label className="block text-sm text-gray-600 mb-1">Search</label>
+      <input
+        type="text"
+        placeholder="Item or SKU..."
+        value={masterSearch}
+        onChange={(e) => setMasterSearch(e.target.value)}
+        className="w-full border rounded-lg px-4 py-2"
+      />
+    </div>
+
+    {/* 📄 LIMIT */}
+    <div className="w-full sm:w-24">
+      <label className="block text-sm text-gray-600 mb-1">Limit</label>
+      <select
+        value={masterLimit}
+        onChange={(e) => {
+          setMasterLimit(Number(e.target.value));
+          setMasterPage(1);
+        }}
+        className="w-full border rounded-lg px-3 py-2"
+      >
+        {PAGE_SIZE_OPTIONS.map((s) => (
+          <option key={s} value={s}>{s}</option>
+        ))}
+      </select>
+    </div>
+
+    {/* 🔄 CLEAR BUTTON */}
+    <div className="w-full sm:w-auto sm:pb-[2px]">
+      <button
+        onClick={() => {
+          setMasterSearch("");
+          setPage(1);
+        }}
+        className="w-full sm:w-auto px-4 py-2 border rounded-lg hover:bg-gray-100 transition"
+      >
+        Clear
+      </button>
+    </div>
+
+  </div>
+</div>
+
         <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
-          <div className="flex flex-wrap gap-4 p-4 items-end">
-            {/* SEARCH */}
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Search</label>
-              <input
-                className="border rounded-lg px-4 py-2 w-64"
-                placeholder="Item or SKU..."
-                value={masterSearch}
-                onChange={(e) => setMasterSearch(e.target.value)}
-              />
-            </div>
-
-            {/* LIMIT */}
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Limit</label>
-              <select
-                className="border rounded-lg px-3 py-2 w-24"
-                value={masterLimit}
-                onChange={(e) => {
-                  setMasterLimit(Number(e.target.value));
-                  setMasterPage(1);
-                }}
-              >
-                {PAGE_SIZE_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
+         
           <table className="w-full table-fixed text-sm">
             <thead className="bg-gray-100">
               <tr>
                 <th className="p-4 text-left w-[20%]">Item</th>
                 <th className="p-4 text-left w-[25%]">SKU</th>
                 <th className="p-4 text-right w-[15%]">Quantity</th>
-                <th className="p-4 text-right w-[20%]">Unit</th>
+                <th className="p-4 text-center w-[20%]">Status</th>
+                <th className="p-4 text-center w-[20%]">Unit</th>
               </tr>
             </thead>
             <tbody>
-              {stockMaster.map((s) => (
-                <tr
-                  key={s._id}
-                  className="border-t hover:bg-indigo-50 transition"
-                >
-                  <td className="p-4 text-left font-medium truncate">
-                    {s.item?.name}
-                  </td>
-                  <td className="p-4 text-left text-gray-600">{s.item?.sku}</td>
-                  <td className="p-4 text-right tabular-nums">{s.quantity}</td>
-                  <td className="p-4 px-5 text-right tabular-nums">
-                    {s.item?.uom}
-                  </td>
-                </tr>
-              ))}
+             {stockMaster.map((s) => {
+  // 🔥 FUNCTION CALL HAPPENS HERE
+  const status = getStockStatus(
+    s.quantity,
+    s.item?.minLevel ?? 0,
+    s.item?.reorderLevel ?? 0
+  );
 
+  return (
+    <tr key={s._id} className="border-t hover:bg-indigo-50">
+      <td className="p-4 font-semibold">{s.item?.name}</td>
+      <td className="p-4">{s.item?.sku}</td>
+      <td className="p-4 text-right">{s.quantity}</td>
+       {/* 👇 USING THE RESULT */}
+      <td className="p-4 text-center">
+        <span className={`px-3 py-1 rounded-full text-xs ${status.className}`}>
+          {status.label}
+        </span>
+      </td>
+      <td className="p-4 text-center">{s.item?.uom}</td>
+    </tr>
+  );
+})}
               {!stockMaster.length && (
                 <tr>
                   <td colSpan="4" className="p-6 text-center text-gray-500">
@@ -321,178 +373,160 @@ const Stock = () => {
             </div>
           </div>
         </div>
-      )}
+     </> )}
 
       {/* ================= STOCK LEDGER ================= */}
       {activeTab === "ledger" && (
+        <>
+        <div className="bg-white rounded-xl shadow mb-4">
+
+  {/* ================= TOP BAR: SEARCH + LIMIT + ADVANCED BUTTON ================= */}
+  <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 p-4 border-b">
+
+    {/* LEFT: SEARCH + LIMIT */}
+    <div className="flex flex-col sm:flex-row sm:items-end gap-4 w-full md:w-auto">
+      {/* SEARCH */}
+      <div className="w-full sm:w-64">
+        <label className="block text-sm text-gray-600 mb-1">Search</label>
+        <input
+          type="text"
+          placeholder="Item, source, reference..."
+          value={ledgerSearch}
+          onChange={(e) => {
+            setLedgerSearch(e.target.value);
+            setLedgerPage(1);
+          }}
+          className="w-full border rounded-lg px-4 py-2"
+        />
+      </div>
+
+      {/* LIMIT */}
+      <div className="w-full sm:w-24">
+        <label className="block text-sm text-gray-600 mb-1">Limit</label>
+        <select
+          value={ledgerLimit}
+          onChange={(e) => {
+            setLedgerLimit(Number(e.target.value));
+            setLedgerPage(1);
+          }}
+          className="w-full border rounded-lg px-3 py-2"
+        >
+          {PAGE_SIZE_OPTIONS.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    {/* RIGHT: ADVANCED FILTERS TOGGLE */}
+    <div className="flex-shrink-0">
+      <button
+        onClick={() => setShowLedgerFilters((p) => !p)}
+        className="
+          flex items-center gap-2
+          px-4 py-2
+          border rounded-lg
+          text-sm font-medium
+          bg-white
+          hover:bg-gray-100
+          transition
+        "
+      >
+        ➕ Advanced Filters
+      </button>
+    </div>
+
+  </div>
+
+  {/* ================= ADVANCED FILTERS ================= */}
+  {showLedgerFilters && (
+    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 p-4 items-end">
+
+      {/* ITEM */}
+      <div className="w-full sm:w-64">
+        <label className="block text-sm text-gray-600 mb-1">Item</label>
+        <select
+          value={ledgerItem}
+          onChange={(e) => {
+            setLedgerItem(e.target.value);
+            setLedgerPage(1);
+          }}
+          className="w-full border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
+        >
+          <option value="">All Items</option>
+          {itemsList.map((it) => (
+            <option key={it._id} value={it._id}>{it.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* FROM DATE */}
+      <div className="w-full sm:w-40">
+        <label className="block text-sm text-gray-600 mb-1">From Date</label>
+        <input
+          type="date"
+          value={ledgerStartDate}
+          onChange={(e) => {
+            setLedgerStartDate(e.target.value);
+            setLedgerPage(1);
+          }}
+          className="w-full border rounded-lg px-3 py-2"
+        />
+      </div>
+
+      {/* TO DATE */}
+      <div className="w-full sm:w-40">
+        <label className="block text-sm text-gray-600 mb-1">To Date</label>
+        <input
+          type="date"
+          value={ledgerEndDate}
+          onChange={(e) => {
+            setLedgerEndDate(e.target.value);
+            setLedgerPage(1);
+          }}
+          className="w-full border rounded-lg px-3 py-2"
+        />
+      </div>
+
+      {/* STOCK IN/OUT */}
+      <div className="w-full sm:w-40">
+        <label className="block text-sm text-gray-600 mb-1">Stock</label>
+        <select
+          value={ledgerInOut}
+          onChange={(e) => {
+            setledgerInOut(e.target.value);
+            setLedgerPage(1);
+          }}
+          className="w-full border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
+        >
+          <option value="">All</option>
+          <option value="IN">IN</option>
+          <option value="OUT">OUT</option>
+        </select>
+      </div>
+
+      {/* CLEAR BUTTON */}
+      <div className="w-full sm:w-auto">
+        <button
+          onClick={() => {
+            setLedgerSearch("");
+            setLedgerStartDate("");
+            setLedgerEndDate("");
+            setLedgerItem("");
+            setLedgerPage(1);
+          }}
+          className="w-full sm:w-auto px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition"
+        >
+          Clear
+        </button>
+      </div>
+
+    </div>
+  )}
+</div>
+
         <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
-          <div className="flex justify-between items-end p-2 border-b">
-            {/* LEFT: SEARCH + LIMIT */}
-            <div className="flex items-end gap-4">
-              {/* SEARCH */}
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">
-                  Search
-                </label>
-                <input
-                  className="border rounded-lg px-4 py-2 w-64"
-                  placeholder="Item, source, reference..."
-                  value={ledgerSearch}
-                  onChange={(e) => {
-                    setLedgerSearch(e.target.value);
-                    setLedgerPage(1);
-                  }}
-                />
-              </div>
-
-              {/* LIMIT */}
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">
-                  Limit
-                </label>
-                <select
-                  className="border rounded-lg px-3 py-2 w-24"
-                  value={ledgerLimit}
-                  onChange={(e) => {
-                    setLedgerLimit(Number(e.target.value));
-                    setLedgerPage(1);
-                  }}
-                >
-                  {PAGE_SIZE_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* RIGHT: ADVANCED FILTERS */}
-            <button
-              onClick={() => setShowLedgerFilters((p) => !p)}
-              className="
-      flex items-center gap-2
-      px-4 py-2
-      border rounded-lg
-      text-sm font-medium
-      bg-white
-      hover:bg-gray-100
-      transition
-    "
-            >
-              ➕ Advanced Filters
-            </button>
-          </div>
-
-          {showLedgerFilters && (
-            <div className="flex flex-wrap gap-4 p-4 items-end">
-              {/* ITEM */}
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Item</label>
-
-                <select
-                  value={ledgerItem}
-                  onChange={(e) => {
-                    setLedgerItem(e.target.value);
-                    setLedgerPage(1);
-                  }}
-                  className="
-      w-64
-      border border-gray-800
-      rounded-lg
-      px-4 py-2
-      text-sm
-      text-gray-800
-      bg-white
-      focus:outline-none
-      focus:ring-2
-      focus:border-gray-50
-      transition
-    "
-                >
-                  <option value="">All Items</option>
-                  {itemsList.map((it) => (
-                    <option key={it._id} value={it._id}>
-                      {it.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {/* FROM DATE */}
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">
-                  From Date
-                </label>
-                <input
-                  type="date"
-                  className="border rounded-lg px-3 py-2"
-                  value={ledgerStartDate}
-                  onChange={(e) => {
-                    setLedgerStartDate(e.target.value);
-                    setLedgerPage(1);
-                  }}
-                />
-              </div>
-
-              {/* TO DATE */}
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">
-                  To Date
-                </label>
-                <input
-                  type="date"
-                  className="border rounded-lg px-3 py-2"
-                  value={ledgerEndDate}
-                  onChange={(e) => {
-                    setLedgerEndDate(e.target.value);
-                    setLedgerPage(1);
-                  }}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">
-                  Stock
-                </label>
-
-                <select
-                  value={ledgerInOut}
-                  onChange={(e) => {
-                    setledgerInOut(e.target.value);
-                    setLedgerPage(1);
-                  }}
-                  className="
-      w-30
-      border border-gray-800
-      rounded-lg
-      px-4 py-2
-      text-sm
-      text-gray-800
-      bg-white
-      focus:outline-none
-      focus:ring-2
-      focus:border-gray-50
-      transition
-    "
-                >
-                  <option value="">All</option>
-                  <option value="IN">IN</option>
-                  <option value="OUT">OUT</option>
-                </select>
-              </div>
-              <button
-                onClick={() => {
-                  setLedgerSearch("");
-                  setLedgerStartDate("");
-                  setLedgerEndDate("");
-                  setLedgerPage(1);
-                }}
-                className="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100"
-              >
-                Clear
-              </button>
-            </div>
-          )}
+       
 
           <table className="w-full table-fixed text-sm">
             <thead className="bg-gray-100">
@@ -600,7 +634,7 @@ const Stock = () => {
             </div>
           </div>
         </div>
-      )}
+              </>)}
 
       {/* ================= ADJUST MODAL ================= */}
       {showAdjust && (

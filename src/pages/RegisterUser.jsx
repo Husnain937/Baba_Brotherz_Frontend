@@ -22,7 +22,7 @@ const RegisterUser = ({ onClose, onSuccess }) => {
     },
   });
 
-  const [loading, setLoading] = useState(false);
+   const [formLoading, setFormLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -40,7 +40,7 @@ const RegisterUser = ({ onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
 
     try {
       await api.post("/auth/register", form);
@@ -50,7 +50,7 @@ const RegisterUser = ({ onClose, onSuccess }) => {
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create user");
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
@@ -125,14 +125,43 @@ const RegisterUser = ({ onClose, onSuccess }) => {
         >
           Cancel
         </button>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-5 py-2 bg-indigo-600 text-white rounded"
-        >
-          {loading ? "Creating..." : "Create"}
-        </button>
+          <button
+             type="submit"
+             className="px-5 py-2 rounded-lg text-white
+             bg-gradient-to-r from-indigo-600 to-blue-600
+             hover:from-indigo-700 hover:to-blue-700
+             shadow-md hover:shadow-lg
+             transition-all duration-200 flex items-center justify-center gap-2"
+                  disabled={formLoading} // or formLoading if you separate it
+                >
+                  {formLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        ></path>
+                      </svg>
+                      { "Creating..."}
+                    </>
+                  ) : 
+                    "Creating User"
+                  }
+                </button>
       </div>
     </form>
   );

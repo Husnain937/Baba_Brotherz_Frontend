@@ -349,90 +349,105 @@ setLoading(true)
 
       {/* ================= TABLE ================= */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div className="flex flex-wrap gap-4 p-4 items-end">
+        <div className="bg-white p-4 rounded-xl shadow mb-4">
+  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
 
-  {/* SEARCH */}
-  <div>
-    <label className="block text-sm text-gray-600 mb-1">
-      Search
-    </label>
-    <input
-      className="border rounded-lg px-4 py-2 w-64"
-      placeholder="Item name or SKU..."
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-    />
-  </div>
+    {/* 🔍 SEARCH */}
+    <div className="w-full sm:w-64">
+      <label className="block text-sm text-gray-600 mb-1">
+        Search
+      </label>
+      <input
+        className="w-full border rounded-lg px-4 py-2"
+        placeholder="Item name or SKU..."
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
+      />
+    </div>
 
-  {/* CATEGORY */}
-  <div>
-    <label className="block text-sm text-gray-600 mb-1">
-      Category
-    </label>
-    <select
-      className="border rounded-lg px-3 py-2 w-48"
-      value={filterCategory}
-      onChange={(e) => {
-        setFilterCategory(e.target.value);
-        setPage(1);
-      }}
-    >
-      <option value="">All</option>
-      {categories.map((c) => (
-        <option key={c._id} value={c._id}>
-          {c.name}
-        </option>
-      ))}
-    </select>
+    {/* 🗂 CATEGORY */}
+    <div className="w-full sm:w-48">
+      <label className="block text-sm text-gray-600 mb-1">
+        Category
+      </label>
+      <select
+        className="w-full border rounded-lg px-3 py-2"
+        value={filterCategory}
+        onChange={(e) => {
+          setFilterCategory(e.target.value);
+          setPage(1);
+        }}
+      >
+        <option value="">All</option>
+        {categories.map((c) => (
+          <option key={c._id} value={c._id}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* 📌 STATUS */}
+    <div className="w-full sm:w-40">
+      <label className="block text-sm text-gray-600 mb-1">
+        Status
+      </label>
+      <select
+        value={status}
+        onChange={(e) => {
+          setStatus(e.target.value);
+          setPage(1);
+        }}
+        className="w-full border rounded-lg px-3 py-2"
+      >
+        <option value="">All Status</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+    </div>
+
+    {/* 📄 LIMIT */}
+    <div className="w-full sm:w-24">
+      <label className="block text-sm text-gray-600 mb-1">
+        Limit
+      </label>
+      <select
+        className="w-full border rounded-lg px-3 py-2"
+        value={limit}
+        onChange={(e) => {
+          setLimit(Number(e.target.value));
+          setPage(1);
+        }}
+      >
+        {PAGE_SIZE_OPTIONS.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* CLEAR */}
+    <div className="w-full sm:w-auto sm:pb-[2px]">
+      <button
+        onClick={() => {
+          setSearch("");
+          setFilterCategory("");
+          setStatus("");
+          setPage(1);
+        }}
+        className="w-full sm:w-auto px-4 py-2 border rounded-lg hover:bg-slate-100 transition"
+      >
+        Clear
+      </button>
+    </div>
+
   </div>
- {/* 📌 STATUS FILTER */}
-  <div>
-    <label className="block text-xs text-gray-600 mb-1">
-      Status
-    </label>
-    <select
-      value={status}
-      onChange={(e) => {
-        setStatus(e.target.value);
-        setPage(1);
-      }}
-      className="border rounded-lg px-3 py-2 w-44"
-    >
-      <option value="">All Status</option>
-      <option value="Active">Active</option>
-      <option value="Inactive">Inactive</option>
-    </select>
-  </div>
-  {/* LIMIT */}
-  <div>
-    <label className="block text-sm text-gray-600 mb-1">
-      Limit
-    </label>
-    <select
-      className="border rounded-lg px-3 py-2 w-24"
-      value={limit}
-      onChange={(e) => {
-        setLimit(Number(e.target.value));
-        setPage(1);
-      }}
-    >
-      {PAGE_SIZE_OPTIONS.map((s) => (
-        <option key={s} value={s}>{s}</option>
-      ))}
-    </select>
-  </div>
-   <button
-          onClick={() => {
-            setSearch("");
-            setFilterCategory("");
-            setStatus("")
-            setPage(1)
-          }}
-          className="px-4 py-2 border rounded-lg mt-6"
-        >
-          Clear
-        </button>
 </div>
+
 
         <table className="w-full text-sm">
           <thead className="bg-gray-100">

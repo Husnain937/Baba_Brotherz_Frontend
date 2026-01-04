@@ -803,86 +803,97 @@ const receiveItems = async () => {
           <FaPlus /> New PO
         </button>
       </div>
-      <div className="flex flex-wrap gap-4 mb-6">
-        {/* 🔍 PO NUMBER SEARCH */}
-        <div>
-          <label className="block text-sm text-gray-600 mb-1">PO Number</label>
-          <input
-            type="text"
-            placeholder="Search PO..."
-            value={searchPO}
-            onChange={(e) => setSearchPO(e.target.value)}
-            className="border rounded-lg px-4 py-2 w-56"
-          />
-        </div>
+      <div className="bg-white p-4 rounded-xl shadow mb-4">
+  <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
 
-        {/* 🧑‍💼 VENDOR DROPDOWN */}
-        <div>
-          <label className="block text-sm text-gray-600 mb-1">Vendor</label>
-          <select
-            value={selectedVendor}
-            onChange={(e) => {setSelectedVendor(e.target.value)
-              setPage(1); 
-            }}
-            className="border rounded-lg px-4 py-2 w-56"
-          >
-            <option value="">All Vendors</option>
-            {vendors.map((v) => (
-              <option key={v._id} value={v._id}>
-                {v.vendorName}
-              </option>
-            ))}
-          </select>
-        </div>
+    {/* 🔍 PO NUMBER SEARCH */}
+    <div className="w-full sm:w-56">
+      <label className="block text-sm text-gray-600 mb-1">PO Number</label>
+      <input
+        type="text"
+        placeholder="Search PO..."
+        value={searchPO}
+        onChange={(e) => setSearchPO(e.target.value)}
+        className="w-full border rounded-lg px-4 py-2"
+      />
+    </div>
 
-        {/* 🟡 STATUS */}
-        <div>
-          <label className="block text-sm text-gray-600 mb-1">Status</label>
-          <select
-            value={selectedStatus}
-            onChange={(e) => {setSelectedStatus(e.target.value)
-              setPage(1);
-            }}
-            className="border rounded-lg px-4 py-2 w-40"
-          >
-            <option value="">All</option>
-            <option value="Pending">Pending</option>
-            <option value="Completed">Completed</option>
-            <option value="Partially Received">Partially Recieved</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm text-gray-600 mb-1">Limit</label>
-          <select
-            value={limit}
-            onChange={(e) => {
-              setLimit(Number(e.target.value));
-              setPage(1);
-            }}
-            className="border rounded-lg px-3 py-2 w-24"
-          >
-            {[5, 10, 20, 50].map((l) => (
-              <option key={l} value={l}>
-                {l}
-              </option>
-            ))}
-          </select>
-        </div>
+    {/* 🧑‍💼 VENDOR DROPDOWN */}
+    <div className="w-full sm:w-56">
+      <label className="block text-sm text-gray-600 mb-1">Vendor</label>
+      <select
+        value={selectedVendor}
+        onChange={(e) => {
+          setSelectedVendor(e.target.value);
+          setPage(1);
+        }}
+        className="w-full border rounded-lg px-4 py-2"
+      >
+        <option value="">All Vendors</option>
+        {vendors.map((v) => (
+          <option key={v._id} value={v._id}>
+            {v.vendorName}
+          </option>
+        ))}
+      </select>
+    </div>
 
-        {/* 🔄 CLEAR */}
-        <button
-          onClick={() => {
-            setSearchPO("");
-            setSelectedVendor("");
-            setSelectedStatus("");
-            setDebouncedSearch("")
-            setPage(1)
-          }}
-          className="px-4 py-2 border rounded-lg mt-6"
-        >
-          Clear
-        </button>
-      </div>
+    {/* 🟡 STATUS */}
+    <div className="w-full sm:w-40">
+      <label className="block text-sm text-gray-600 mb-1">Status</label>
+      <select
+        value={selectedStatus}
+        onChange={(e) => {
+          setSelectedStatus(e.target.value);
+          setPage(1);
+        }}
+        className="w-full border rounded-lg px-4 py-2"
+      >
+        <option value="">All</option>
+        <option value="Pending">Pending</option>
+        <option value="Completed">Completed</option>
+        <option value="Partially Received">Partially Received</option>
+      </select>
+    </div>
+
+    {/* LIMIT */}
+    <div className="w-full sm:w-24">
+      <label className="block text-sm text-gray-600 mb-1">Limit</label>
+      <select
+        value={limit}
+        onChange={(e) => {
+          setLimit(Number(e.target.value));
+          setPage(1);
+        }}
+        className="w-full border rounded-lg px-3 py-2"
+      >
+        {[5, 10, 20, 50].map((l) => (
+          <option key={l} value={l}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* 🔄 CLEAR BUTTON */}
+    <div className="w-full sm:w-auto sm:pb-[2px]">
+      <button
+        onClick={() => {
+          setSearchPO("");
+          setSelectedVendor("");
+          setSelectedStatus("");
+          setDebouncedSearch("");
+          setPage(1);
+        }}
+        className="w-full sm:w-auto px-4 py-2 border rounded-lg hover:bg-slate-100 transition"
+      >
+        Clear
+      </button>
+    </div>
+
+  </div>
+</div>
+
 
       {/* ================= PO TABLE ================= */}
       <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
