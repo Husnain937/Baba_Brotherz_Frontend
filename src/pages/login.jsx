@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
+import api from "../api/axios";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,8 +28,7 @@ const Login = () => {
     try {
       setLoading(true)
       setFormLoading(true)
-      const response = await axios.post(
-        "http://localhost:3000/api/auth/login",
+      const response = await api.post("auth/login",
         { email, password }
       );
 

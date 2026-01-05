@@ -565,6 +565,7 @@ const getProductionStatusBadge = (status) => {
             <th className="p-4 text-left w-[25%]">Order #</th>
             <th className="p-4 text-left w-[20%]">Product</th>
             <th className="p-4 text-right w-[20%]">Quantity</th>
+            <th className="p-4 text-right w-[20%]">Total Amount</th>
             <th className="p-4 text-left w-[20%]">Status</th>
             <th className="p-4 text-left w-[20%]">Date</th>
             <th className="p-4 text-center w-[20%]">Actions</th>
@@ -589,15 +590,9 @@ const getProductionStatusBadge = (status) => {
               <td className="p-4 text-right tabular-nums">
                 {o.quantityPlanned}
               </td>
-
-              {/* <td className="p-4 text-sm">
-                {o.requiredMaterials.map((m) => (
-                  <div key={m._id} className="text-gray-700">
-                    {m.item?.name} — {m.quantityRequired} {m.item?.uom}
-                  </div>
-                ))}
-              </td> */}
-
+               <td className="p-4 text-right tabular-nums">
+                {o.totalAmount}
+              </td>
               <td className="p-1">
   <span
     className={`
