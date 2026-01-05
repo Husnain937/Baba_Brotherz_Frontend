@@ -1,6 +1,6 @@
 import "./App.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
+import React, { useEffect } from "react";
 import Root from "./utils/root";
 import Login from "./pages/login";
 import Protected from "./utils/protected";
@@ -29,6 +29,25 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function App() {
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  useEffect(() => {
+    const minWidth = 1024;
+    const isMobileUA = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (window.innerWidth < minWidth || isMobileUA) {
+      setIsMobile(true);
+    }
+  }, []);
+
+  if (isMobile) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", textAlign: "center", padding: "20px" }}>
+        <h1>⚠️ This app is only available on laptops/desktops.</h1>
+        <p>Please use a laptop or desktop computer to access this application.</p>
+      </div>
+    );
+  }
+
   return (
     <Router>
       <ToastContainer
