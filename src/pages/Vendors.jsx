@@ -161,11 +161,12 @@ return (
         {/* MODAL */}
         <div
           className="
-            fixed top-10 left-1/2 -translate-x-1/2 z-50
-            w-full max-w-2xl min-h-[520px]
-            bg-white rounded-2xl
-            shadow-[0_20px_60px_rgba(0,0,0,0.25)]
-            animate-dropFromTop
+            fixed top-4 left-1/2 -translate-x-1/2 z-50
+        w-full max-w-2xl
+        max-h-[90vh] overflow-y-auto
+        bg-white rounded-2xl
+        shadow-[0_20px_60px_rgba(0,0,0,0.25)]
+        animate-dropFromTop
           "
         >
           {/* HEADER */}
