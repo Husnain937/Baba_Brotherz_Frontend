@@ -367,7 +367,21 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       icon: <FaUsers />,
       permission: "settings",
     },
-
+    {
+      name: "Invoice",
+      path: "/admin/dashboard/invoice",
+      icon: <FaCogs />,
+    },
+     {
+      name: "DeliveryNote",
+      path: "/admin/dashboard/deliverNote",
+      icon: <FaCogs />,
+    },
+ {
+      name: "Customer",
+      path: "/admin/dashboard/customer",
+      icon: <FaTruck />,
+    },
     // COMMON
     {
       name: "Profile",

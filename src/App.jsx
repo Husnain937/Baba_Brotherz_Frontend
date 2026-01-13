@@ -5,7 +5,7 @@ import Root from "./utils/root";
 import Login from "./pages/login";
 import Protected from "./utils/protected";
 import Dashboard from "./pages/dashboard";
-
+import Invoice from "./pages/Invoice";
 import Categories from "./pages/Categories";
 import Items from "./pages/Items";
 import Vendors from "./pages/Vendors";
@@ -27,6 +27,9 @@ import ExpenseCategories from "./pages/ExpenseCategories";
 import DashboardHome from "./pages/DashboardHome";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Customers from "./pages/Customer";
+import DeliveryNote from "./pages/DeliveryNote";
+import InvoiceAndCustomerLegder from "./pages/InvoiceAndCustomerLegder";
 
 function App() {
   const [isMobile, setIsMobile] = React.useState(false);
@@ -222,6 +225,9 @@ function App() {
           />
 
           {/* ================= COMMON ================= */}
+          <Route path="invoice" element={<InvoiceAndCustomerLegder />} />
+          <Route path="deliverNote" element={<DeliveryNote />} />
+          <Route path="customer" element={<Customers />} />
           <Route path="profile" element={<Profile />} />
           <Route path="logout" element={<Logout />} />
         </Route>
