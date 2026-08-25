@@ -211,11 +211,6 @@ const getBOMStatusBadge = (status) => {
 
   return (
     <div className="min-h-screen p-8 bg-gradient-to-br from-gray-100 to-gray-200 relative">
-      {loading && (
-  <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-  </div>
-)}
       {viewBOM && (
         <>
           {/* BACKDROP */}
@@ -584,8 +579,18 @@ const getBOMStatusBadge = (status) => {
       </th>
     </tr>
   </thead>
-
-  <tbody>
+{loading ? (
+      <tbody>
+        <tr>
+          <td colSpan="4" className="h-40">
+            <div className="flex justify-center items-center">
+              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    ) :
+  (<tbody>
     {boms.map((b, idx) => (
       <tr
         key={b._id}
@@ -677,7 +682,7 @@ const getBOMStatusBadge = (status) => {
         </td>
       </tr>
     )}
-  </tbody>
+  </tbody>)}
        </table>
 
         <div className="flex justify-between items-center p-4 border-t">

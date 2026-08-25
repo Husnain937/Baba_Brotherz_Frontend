@@ -301,11 +301,7 @@ const receiveItems = async () => {
 
   return (
     <div className="min-h-screen p-8 bg-gradient-to-br from-gray-100 to-gray-200 relative">
-      {loading && (
-  <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-  </div>
-)}
+
       
       {viewPO && (
   <>
@@ -524,36 +520,6 @@ const receiveItems = async () => {
               >
                 Cancel
               </button>
-
-              {/* <button
-                className="bg-green-600 px-4 py-2 text-white rounded"
-                onClick={async () => {
-                  const payload = {
-                    poId: receivePO._id,
-                    items: receivePO.receiveItems
-                      .filter((it) => Number(it.receiveNow) > 0)
-                      .map((i) => ({
-                        item: i.item, // ✅ matches backend
-                        receivedQty: Number(i.receiveNow),
-                        unitPrice: i.unitPrice,
-                      })),
-                  };
-
-                  if (!payload.items.length)
-                    return toast.error("Please enter quantities to receive.");
-
-                  try {
-                    await api.post("/grn", payload);
-                    toast.success("Stock updated & GRN created successfully");
-                    setReceivePO(null);
-                    setRefetch((p) => p + 1);
-                  } catch (err) {
-                    toast.error("Failed to receive items.");
-                  }
-                }}
-              >
-                Receive Items
-              </button> */}
 
               <button
   className="bg-green-600 px-4 py-2 text-white rounded flex items-center justify-center gap-2"
@@ -908,8 +874,18 @@ const receiveItems = async () => {
               <th className="p-4 text-center w-[25%]">Actions</th>
             </tr>
           </thead>
-
-          <tbody>
+{loading ? (
+      <tbody>
+        <tr>
+          <td colSpan="6" className="h-40">
+            <div className="flex justify-center items-center">
+              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    ) :
+        (  <tbody>
             {pos.map((p) => (
               <tr
                 key={p._id}
@@ -1007,7 +983,7 @@ const receiveItems = async () => {
                 </td>
               </tr>
             )}
-          </tbody>
+          </tbody>)}
         </table>
         <div className="flex justify-between items-center p-4 border-t">
           <span className="text-sm text-gray-600">

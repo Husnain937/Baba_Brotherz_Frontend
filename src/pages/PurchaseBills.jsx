@@ -249,11 +249,7 @@ const PurchaseBills = () => {
       </div>
       {activeTab === "Purchase_Bills" && (
         <>
-          {loading && (
-            <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
+
           {/* ================= VIEW BILL MODAL ================= */}
           {viewBill && (
             <>
@@ -747,8 +743,18 @@ const PurchaseBills = () => {
                   <th className="p-4 text-center w-[15%]">Actions</th>
                 </tr>
               </thead>
-
-              <tbody>
+{loading ? (
+      <tbody>
+        <tr>
+          <td colSpan="6" className="h-40">
+            <div className="flex justify-center items-center">
+              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    ) :
+            (  <tbody>
                 {bills.map((b) => (
                   <tr key={b._id} className="border-t hover:bg-indigo-50">
                     <td className="p-4">{b.billNumber}</td>
@@ -800,7 +806,7 @@ const PurchaseBills = () => {
                     </td>
                   </tr>
                 )}
-              </tbody>
+              </tbody>)}
             </table>
             {/* ================= PAGINATION ================= */}
 

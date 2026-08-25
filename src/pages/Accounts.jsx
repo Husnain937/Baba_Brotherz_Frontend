@@ -148,11 +148,7 @@ const submitForm = async (e) => {
         <>
           {/* ================= HEADER ================= */}
           <div className="flex justify-between items-center mb-6">
-            {loading && (
-              <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-                <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            )}
+           
             <div>
               <h1 className="text-2xl font-bold text-gray-800">Accounts</h1>
               <p className="text-sm text-gray-600">
@@ -253,8 +249,18 @@ const submitForm = async (e) => {
                   <th className="p-4 text-center">Action</th>
                 </tr>
               </thead>
-
-              <tbody>
+{loading ? (
+      <tbody>
+        <tr>
+          <td colSpan="5" className="h-40">
+            <div className="flex justify-center items-center">
+              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    ) :
+            (  <tbody>
                 {!accounts.length && (
                   <tr>
                     <td colSpan="5" className="p-8 text-center text-gray-500">
@@ -322,7 +328,7 @@ const submitForm = async (e) => {
                     </td>
                   </tr>
                 ))}
-              </tbody>
+              </tbody>)}
             </table>
             {/* ================= PAGINATION ================= */}
             <div className="flex justify-between items-center p-4 border-t">

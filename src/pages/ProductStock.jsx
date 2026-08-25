@@ -183,11 +183,6 @@ const loadLedger = async () => {
   ============================ */
  return (
   <div className="min-h-screen p-8 bg-gradient-to-br from-gray-100 to-gray-200 relative">
-   {loading && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      )}
     {/* ================= HEADER ================= */}
     <div className="flex justify-between items-center mb-8">
       <div>
@@ -303,8 +298,18 @@ const loadLedger = async () => {
               <th className="p-4 text-right w-[25%]">Quantity</th>
             </tr>
           </thead>
-
-          <tbody>
+{loading ? (
+      <tbody>
+        <tr>
+          <td colSpan="3" className="h-40">
+            <div className="flex justify-center items-center">
+              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    ) :
+         ( <tbody>
             {stock.map((s) => (
               <tr
                 key={s._id}
@@ -329,7 +334,7 @@ const loadLedger = async () => {
                 </td>
               </tr>
             )}
-          </tbody>
+          </tbody>)}
         </table>
         <div className="flex justify-between items-center p-4 border-t">
   <span className="text-sm text-gray-600">
@@ -363,7 +368,7 @@ const loadLedger = async () => {
     {/* ================= STOCK LEDGER ================= */}
     {activeTab === "ledger" && (
       
-      <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
+  <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
   <div className="bg-white p-4 rounded-xl shadow mb-4">
   <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
 
@@ -488,8 +493,18 @@ const loadLedger = async () => {
               <th className="p-4 text-left w-[18%]">Reference</th>
             </tr>
           </thead>
-
-        <tbody>
+{loading ? (
+      <tbody>
+        <tr>
+          <td colSpan="6" className="h-40">
+            <div className="flex justify-center items-center">
+              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    ) :
+ ( <tbody>
   {ledger.map((l) => {
     const sourceStyle =
       l.source === "GRN"
@@ -546,7 +561,7 @@ const loadLedger = async () => {
       </td>
     </tr>
   )}
-</tbody>
+</tbody>)}
 
         </table>
         <div className="flex justify-between items-center p-4 border-t">

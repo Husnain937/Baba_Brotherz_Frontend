@@ -72,12 +72,6 @@ const CustomerLedger = () => {
 
   return (
     <div>
-      {loading && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-          <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      )}
-
       {/* HEADER */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Customer Ledger</h1>
@@ -160,7 +154,18 @@ const CustomerLedger = () => {
                 <th className="p-4 text-right">Balance</th>
               </tr>
             </thead>
-            <tbody>
+            {loading ? (
+      <tbody>
+        <tr>
+          <td colSpan="5" className="h-40">
+            <div className="flex justify-center items-center">
+              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    ) :
+            (<tbody>
               {ledger.map((row) => (
                 <tr key={row._id} className="border-t hover:bg-indigo-50">
                   <td className="p-4">
@@ -189,7 +194,7 @@ const CustomerLedger = () => {
                   </td>
                 </tr>
               )}
-            </tbody>
+            </tbody>)}
           </table>
         </div>
       )}

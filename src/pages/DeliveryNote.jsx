@@ -161,12 +161,6 @@ const DeliveryNote = () => {
   // ========== JSX ==========
   return (
     <div className="min-h-screen p-8 bg-gradient-to-br from-gray-100 to-gray-200 relative">
-      {loading && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      )}
-
       {/* ========== CREATE / EDIT MODAL ========== */}
       {editNote !== null && (
         <>
@@ -339,7 +333,18 @@ const DeliveryNote = () => {
               <th className="p-4 text-center">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          {loading ? (
+      <tbody>
+        <tr>
+          <td colSpan="5" className="h-40">
+            <div className="flex justify-center items-center">
+              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    ) :
+       (   <tbody>
             {deliveryNotes.map((dn) => (
               <tr key={dn._id} className="border-t hover:bg-indigo-50 transition">
                 <td className="p-4 font-medium">{dn.deliveryNumber}</td>
@@ -366,7 +371,7 @@ const DeliveryNote = () => {
                 <td colSpan="5" className="p-6 text-center text-gray-500">No delivery notes found</td>
               </tr>
             )}
-          </tbody>
+          </tbody>)}
         </table>
 
         {/* Pagination */}

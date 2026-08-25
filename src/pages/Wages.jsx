@@ -239,11 +239,6 @@ const Wages = () => {
   /* ============================ RENDER ============================ */
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
-      {loading && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      )}
       {summary && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white p-5 rounded-xl shadow">
@@ -534,7 +529,18 @@ const Wages = () => {
               <th className="p-4 text-center">Action</th>
             </tr>
           </thead>
-          <tbody>
+          {loading ? (
+      <tbody>
+        <tr>
+          <td colSpan="6" className="h-40">
+            <div className="flex justify-center items-center">
+              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    ) :
+     (     <tbody>
             {!wages.length && (
               <tr>
                 <td colSpan="6" className="p-8 text-center text-gray-500">
@@ -600,7 +606,7 @@ const Wages = () => {
                 </td>
               </tr>
             ))}
-          </tbody>
+          </tbody>)}
         </table>
         <div className="flex justify-between items-center p-4">
           <button

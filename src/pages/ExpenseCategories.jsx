@@ -96,11 +96,6 @@ const ExpenseCategories = () => {
     {activeTab==="Expensive_Category" && (<>
       {/* ================= HEADER ================= */}
       <div className="flex justify-between items-center mb-6">
-        {loading && (
-  <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-  </div>
-)}
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
             Expense Categories
@@ -194,8 +189,18 @@ const ExpenseCategories = () => {
               </th>
             </tr>
           </thead>
-
-          <tbody>
+{loading ? (
+      <tbody>
+        <tr>
+          <td colSpan="4" className="h-40">
+            <div className="flex justify-center items-center">
+              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    ) :
+         ( <tbody>
             {!categories.length && (
               <tr>
                 <td colSpan="4" className="p-8 text-center text-gray-500">
@@ -250,7 +255,7 @@ const ExpenseCategories = () => {
                 </td>
               </tr>
             ))}
-          </tbody>
+          </tbody>)}
         </table>
         <div className="flex justify-between items-center p-4">
           <button
