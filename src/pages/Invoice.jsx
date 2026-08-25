@@ -213,12 +213,6 @@ const receivePayment = async () => {
   // ================== JSX ==================
   return (
     <div className="min-h-screen p-6 bg-gray-100">
-      {loading && (
-        <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      )}
-
       {/* ====== CREATE / EDIT MODAL ====== */}
       {(editInvoice || createInvoice) && (
         <>
@@ -431,14 +425,25 @@ const receivePayment = async () => {
         <table className="w-full text-sm table-fixed">
           <thead className="bg-gray-100">
             <tr>
-              <th className="p-4 text-left">#</th>
+              <th className="p-4 text-left">Invoice ID</th>
               <th className="p-4 text-left">Customer</th>
               <th className="p-4 text-left">Total</th>
               <th className="p-4 text-left">Status</th>
               <th className="p-4 text-center">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          {loading ? (
+      <tbody>
+        <tr>
+          <td colSpan="5" className="h-40">
+            <div className="flex justify-center items-center">
+              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    ) :
+         ( <tbody>
             {invoices.map((inv) => (
               <tr key={inv._id} className="border-t hover:bg-indigo-50 transition">
                 <td className="p-4">{inv._id.slice(-6)}</td>
@@ -495,7 +500,7 @@ const receivePayment = async () => {
                 </td>
               </tr>
             )}
-          </tbody>
+          </tbody>)}
         </table>
         {receivePaymentId && (
   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">

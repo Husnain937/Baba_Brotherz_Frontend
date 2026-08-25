@@ -140,11 +140,7 @@ const submitForm = async (e) => {
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
         {/* ================= CREATE / EDIT EMPLOYEE MODAL ================= */}
-        {loading && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      )}
+      
 {showForm && (
   <>
     {/* BACKDROP */}
@@ -412,8 +408,18 @@ const submitForm = async (e) => {
               </th>
             </tr>
           </thead>
-
-          <tbody>
+{loading ? (
+      <tbody>
+        <tr>
+          <td colSpan="6" className="h-40">
+            <div className="flex justify-center items-center">
+              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    ) :
+         ( <tbody>
             {!employees.length && !loading && (
               <tr>
                 <td
@@ -503,7 +509,7 @@ const submitForm = async (e) => {
 
               </tr>
             ))}
-          </tbody>
+          </tbody>)}
         </table>
 
         {/* ================= PAGINATION ================= */}

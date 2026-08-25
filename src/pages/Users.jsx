@@ -93,11 +93,6 @@ const openEdit = (user) => {
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       {/* ================= HEADER ================= */}
-          {loading && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      )}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">Users</h1>
@@ -176,8 +171,18 @@ const openEdit = (user) => {
               <th className="p-4 text-center">Actions</th>
             </tr>
           </thead>
-
-          <tbody>
+{loading ? (
+      <tbody>
+        <tr>
+          <td colSpan="4" className="h-40">
+            <div className="flex justify-center items-center">
+              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    ) :
+         ( <tbody>
             {!users.length && (
               <tr>
                 <td colSpan="3" className="p-6 text-center text-gray-500">
@@ -218,7 +223,7 @@ const openEdit = (user) => {
 
               </tr>
             ))}
-          </tbody>
+          </tbody>)}
         </table>
 
         {/* ================= PAGINATION ================= */}
